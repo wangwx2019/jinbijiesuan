@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>小马宝莉学习金币记录器</title>
+    
+    <!-- 新增：桌面图标设置 -->
+    <link rel="apple-touch-icon" sizes="180x180" href="xiaomabaoli.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="xiaomabaoli.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="xiaomabaoli.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        :root {
+            /* 小马宝莉主题配色 */
+            --main-purple: #9370DB;
+            --light-purple: #E6E6FA;
+            --add-green: #98FB98;
+            --deep-green: #3CB371;
+            --minus-orange: #FFB6C1;
+            --deep-orange: #FF69B4;
+            --bg-gradient: linear-gradient(180deg, #FFF0F5 0%, #E6E6FA 100%);
+            --card-white: rgba(255, 255, 255, 0.9);
+            --text-dark: #483D8B;
+            --shadow: 0 4px 12px rgba(147, 112, 219, 0.2);
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: env(safe-area-inset-top) 16px 100px 16px;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 90px);
+        }
+
+        /* 顶部数据看板 */
+        .data-board {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0 24px;
+        }
+
+        .board-card {
+            flex: 1;
+            background: var(--card-white);
+            border-radius: 20px;
+            padding: 20px 16px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border: 3px solid var(--main-purple);
+        }
+
+        .board-card.add-card {
+            border-color: var(--deep-green);
+        }
+
+        .board-card.minus-card {
+            border-color: var(--deep-orange);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .coin-num {
+            font-size: 40px;
+            font-weight: 800;
+            color: var(--main-purple);
+        }
+
+        .add-card .coin-num {
+            color: var(--deep-green);
+        }
+
+        .minus-card .coin-num {
+            color: var(--deep-orange);
+        }
+
+        /* 核心操作按钮 */
+        .main-btn-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .main-btn {
+            flex: 1;
+            height: 80px;
+            border-radius: 20px;
+            border: none;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+        }
+
+        .main-btn:active {
+            transform: scale(0.96);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, var(--add-green) 0%, var(--deep-green) 100%);
+        }
+
+        .minus-btn {
+            background: linear-gradient(135deg, var(--minus-orange) 0%, var(--deep-orange) 100%);
+        }
+
+        /* 记录区域 */
+        .record-section {
+            background: var(--card-white);
+            border-radius: 20px;
+            padding: 20px 16px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            min-height: 200px;
+        }
+
+        .record-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .record-title::before, .record-title::after {
+            content: "✨";
+        }
+
+        .record-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-radius: 12px;
+            background: var(--light-purple);
+            font-size: 15px;
+        }
+
+        .record-item.add-item {
+            background: #F0FFF0;
+        }
+
+        .record-item.minus-item {
+            background: #FFF0F5;
+        }
+
+        .record-info {
+            flex: 1;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .record-score {
+            font-weight: 700;
+            font-size: 16px;
+            margin-right: 12px;
+        }
+
+        .add-item .record-score {
+            color: var(--deep-green);
+        }
+
+        .minus-item .record-score {
+            color: var(--deep-orange);
+        }
+
+        .delete-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: #FFE4E1;
+            color: #FF4500;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .empty-tip {
+            text-align: center;
+            color: #999;
+            font-size: 15px;
+            padding: 40px 0;
+        }
+
+        /* 底部功能栏 */
+        .bottom-btn-group {
+            display: flex;
+            gap: 10px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            background: white;
+            padding: 12px 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+            flex-wrap: wrap;
+        }
+
+        .bottom-btn {
+            flex: 1;
+            height: 50px;
+            border-radius: 16px;
+            border: 2px solid var(--main-purple);
+            background: white;
+            color: var(--text-dark);
+            font-size: 15px;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            min-width: 70px;
+        }
+
+        .bottom-btn:active {
+            transform: scale(0.96);
+            background: var(--light-purple);
+        }
+
+        .danger-btn {
+            border-color: var(--deep-orange);
+            color: var(--deep-orange);
+        }
+
+        /* 弹窗遮罩 */
+        .modal-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-mask.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 380px;
+            background: white;
+            border-radius: 24px;
+            padding: 24px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(30px);
+            transition: all 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-mask.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--main-purple);
+        }
+
+        /* 加分/扣分弹窗专用样式 */
+        .fixed-btn-modal {
+            width: 100%;
+            max-width: 380px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(30px);
+            transition: all 0.3s ease;
+            max-height: 80vh;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 20px;
+        }
+        .modal-mask.show .fixed-btn-modal {
+            transform: translateY(0);
+        }
+        .modal-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-bottom: 16px;
+        }
+        .modal-fixed-btn-area {
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        /* 规则设置弹窗专用样式 */
+        .rule-modal-content {
+            width: 100%;
+            max-width: 380px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(30px);
+            transition: all 0.3s ease;
+            max-height: 85vh;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 20px;
+        }
+        .modal-mask.show .rule-modal-content {
+            transform: translateY(0);
+        }
+        .rule-modal-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-bottom: 16px;
+        }
+        .rule-modal-fixed-btn {
+            width: 100%;
+            flex-shrink: 0;
+        }
+        .rule-close-btn {
+            width: 100%;
+            height: 50px;
+            border-radius: 16px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, var(--main-purple) 0%, #7B68EE 100%);
+            color: white;
+        }
+        .rule-close-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* 规则项编辑样式 */
+        .rule-item-with-edit {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 12px;
+            background: var(--light-purple);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .rule-item-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .rule-item-edit {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+        .rule-item-with-edit.editing .rule-item-display {
+            display: none;
+        }
+        .rule-item-with-edit.editing .rule-item-edit {
+            display: flex;
+        }
+        .rule-edit-input {
+            flex: 1;
+            min-width: 100px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 2px solid var(--light-purple);
+            font-size: 14px;
+            outline: none;
+        }
+        .rule-edit-input:focus {
+            border-color: var(--main-purple);
+        }
+        .rule-edit-score {
+            width: 70px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 2px solid var(--light-purple);
+            font-size: 14px;
+            outline: none;
+        }
+        .rule-edit-score:focus {
+            border-color: var(--main-purple);
+        }
+        .rule-edit-btns {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .rule-edit-save {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            background: var(--deep-green);
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .rule-edit-cancel {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            background: #F5F5F5;
+            color: #666;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .rule-action-btns {
+            display: flex;
+            gap: 6px;
+        }
+        .rule-edit-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: var(--main-purple);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rule-delete-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: #FFE4E1;
+            color: #FF4500;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 条目网格 */
+        .item-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .item-btn {
+            padding: 12px 8px;
+            border-radius: 12px;
+            border: 2px solid var(--light-purple);
+            background: var(--light-purple);
+            color: var(--text-dark);
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s ease;
+            word-break: break-all;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        .item-btn:active {
+            transform: scale(0.95);
+            background: var(--main-purple);
+            color: white;
+        }
+
+        .add-item-btn {
+            border-color: var(--add-green);
+            background: #F0FFF0;
+        }
+
+        .add-item-btn:active {
+            background: var(--deep-green);
+        }
+
+        .minus-item-btn {
+            border-color: var(--minus-orange);
+            background: #FFF0F5;
+        }
+
+        .minus-item-btn:active {
+            background: var(--deep-orange);
+        }
+
+        /* 备注输入框 */
+        .remark-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid var(--light-purple);
+            font-size: 15px;
+            margin-bottom: 0;
+            outline: none;
+        }
+
+        .remark-input:focus {
+            border-color: var(--main-purple);
+        }
+
+        /* 弹窗按钮组 */
+        .modal-btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            height: 50px;
+            border-radius: 16px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.96);
+        }
+
+        .cancel-btn {
+            background: #F5F5F5;
+            color: #666;
+        }
+
+        .confirm-add-btn {
+            background: linear-gradient(135deg, var(--add-green) 0%, var(--deep-green) 100%);
+            color: white;
+        }
+
+        .confirm-minus-btn {
+            background: linear-gradient(135deg, var(--minus-orange) 0%, var(--deep-orange) 100%);
+            color: white;
+        }
+
+        /* 周统计/每周分析弹窗样式（加固滚动固定） */
+        .week-stat-content {
+            max-width: 380px;
+            position: relative;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 24px 20px;
+            overflow: hidden;
+        }
+        .week-stat-content .modal-title {
+            flex-shrink: 0;
+            margin: 0;
+        }
+        #weekStatContent, #weekAnalyzeContent {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .close-stat-btn {
+            flex-shrink: 0;
+            width: 100%;
+            height: 50px;
+            border-radius: 16px;
+            border: none;
+            background: var(--main-purple);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .stat-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: var(--light-purple);
+            margin-bottom: 10px;
+        }
+
+        .stat-item-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-detail {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        /* 重置选择弹窗样式 */
+        .reset-choice-btn {
+            width: 100%;
+            height: 60px;
+            border-radius: 16px;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+        }
+
+        .reset-today-btn {
+            background: linear-gradient(135deg, #FFE4E1 0%, #FF69B4 100%);
+            color: white;
+        }
+
+        .reset-all-btn {
+            background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
+            color: white;
+        }
+
+        /* 规则设置弹窗兼容样式 */
+        .rule-section {
+            margin-bottom: 20px;
+        }
+
+        .rule-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--main-purple);
+        }
+
+        .rule-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            border: 2px solid var(--light-purple);
+            border-radius: 12px;
+            padding: 8px;
+        }
+
+        .add-rule-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .rule-input {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 2px solid var(--light-purple);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .rule-input:focus {
+            border-color: var(--main-purple);
+        }
+
+        .score-input {
+            flex: 0.5;
+            min-width: 80px;
+        }
+
+        .add-rule-btn {
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: none;
+            background: var(--main-purple);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        /* 自定义统一提示弹窗 */
+        #tipModal .modal-content, #confirmModal .modal-content {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .tip-text, .confirm-text {
+            font-size: 16px;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .tip-confirm-btn {
+            width: 100%;
+            height: 50px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, var(--main-purple) 0%, #7B68EE 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+        .tip-confirm-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* 每周分析弹窗样式 */
+        .analysis-box {
+            padding: 10px 14px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .analysis-box.good {
+            background: #f0fff9;
+            border-left: 4px solid #3CB371;
+        }
+        .analysis-box.bad {
+            background: #fff5f7;
+            border-left: 4px solid #FF69B4;
+        }
+        .analysis-title {
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #483D8B;
+        }
+
+        /* 修改分值弹窗专用样式 */
+        .edit-score-modal {
+            width: 100%;
+            max-width: 380px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(30px);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 20px;
+        }
+        .modal-mask.show .edit-score-modal {
+            transform: translateY(0);
+        }
+        .edit-score-info {
+            font-size: 15px;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            text-align: left;
+            line-height: 1.5;
+        }
+        .edit-score-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid var(--light-purple);
+            font-size: 16px;
+            margin-bottom: 20px;
+            outline: none;
+            text-align: center;
+        }
+        .edit-score-input:focus {
+            border-color: var(--main-purple);
+        }
+        .edit-score-btn-group {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+        .edit-score-cancel {
+            flex: 1;
+            height: 50px;
+            border-radius: 16px;
+            border: none;
+            background: #F5F5F5;
+            color: #666;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+        .edit-score-cancel:active {
+            transform: scale(0.96);
+        }
+        .edit-score-save {
+            flex: 1;
+            height: 50px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, var(--main-purple) 0%, #7B68EE 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+        .edit-score-save:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部数据看板 -->
+    <div class="data-board">
+        <div class="board-card">
+            <div class="card-title">本周累计金币</div>
+            <div class="coin-num" id="weekTotalCoin">0</div>
+        </div>
+        <div class="board-card minus-card">
+            <div class="card-title">今日实时金币</div>
+            <div class="coin-num" id="todayCoin">0</div>
+        </div>
+    </div>
+
+    <!-- 核心操作按钮 -->
+    <div class="main-btn-group">
+        <button class="main-btn add-btn" id="openAddModal">➕ 加分</button>
+        <button class="main-btn minus-btn" id="openMinusModal">➖ 扣分</button>
+    </div>
+
+    <!-- 记录区域 -->
+    <div class="record-section">
+        <div class="record-title">今日记录</div>
+        <div class="record-list" id="recordList">
+            <div class="empty-tip">暂无记录，开始记录吧！</div>
+        </div>
+    </div>
+
+    <!-- 底部功能栏 -->
+    <div class="bottom-btn-group">
+        <button class="bottom-btn" id="todaySettle">今日结算</button>
+        <button class="bottom-btn danger-btn" id="resetBtn">重置</button>
+        <button class="bottom-btn" id="openWeekStat">周统计</button>
+        <button class="bottom-btn" id="openWeekAnalyze">每周分析</button>
+        <button class="bottom-btn" id="ruleSettings">规则设置</button>
+    </div>
+
+    <!-- 加分弹窗 -->
+    <div class="modal-mask" id="addModal">
+        <div class="fixed-btn-modal">
+            <div class="modal-title">✨ 选择加分原因 ✨</div>
+            <div class="modal-scroll-area">
+                <div class="item-grid" id="addItemGrid"></div>
+                <input type="text" class="remark-input" id="addRemark" placeholder="添加备注（可选）">
+            </div>
+            <div class="modal-fixed-btn-area">
+                <div class="modal-btn-group">
+                    <button class="modal-btn cancel-btn" id="closeAddModal">取消</button>
+                    <button class="modal-btn confirm-add-btn" id="confirmAdd">确认加分</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 扣分弹窗 -->
+    <div class="modal-mask" id="minusModal">
+        <div class="fixed-btn-modal">
+            <div class="modal-title">💫 选择扣分原因 💫</div>
+            <div class="modal-scroll-area">
+                <div class="item-grid" id="minusItemGrid"></div>
+                <input type="text" class="remark-input" id="minusRemark" placeholder="添加备注（可选）">
+            </div>
+            <div class="modal-fixed-btn-area">
+                <div class="modal-btn-group">
+                    <button class="modal-btn cancel-btn" id="closeMinusModal">取消</button>
+                    <button class="modal-btn confirm-minus-btn" id="confirmMin">确认扣分</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 周统计弹窗 -->
+    <div class="modal-mask" id="weekStatModal">
+        <div class="modal-content week-stat-content">
+            <div class="modal-title">📊 周统计报表 📊</div>
+            <div id="weekStatContent"></div>
+            <button class="close-stat-btn" id="closeWeekStat">关闭</button>
+        </div>
+    </div>
+
+    <!-- 每周分析弹窗 -->
+    <div class="modal-mask" id="weekAnalyzeModal">
+        <div class="modal-content week-stat-content">
+            <div class="modal-title">📈 每周进步分析 📉</div>
+            <div id="weekAnalyzeContent"></div>
+            <button class="close-stat-btn" id="closeWeekAnalyze">关闭</button>
+        </div>
+    </div>
+
+    <!-- 重置选择弹窗 -->
+    <div class="modal-mask" id="resetChoiceModal">
+        <div class="modal-content">
+            <div class="modal-title">🔄 选择重置类型 🔄</div>
+            <button class="reset-choice-btn reset-today-btn" id="doTodayReset">今日重置</button>
+            <button class="reset-choice-btn reset-all-btn" id="doAllReset">全部重置</button>
+            <button class="modal-btn cancel-btn" id="closeResetModal" style="width:100%;">取消</button>
+        </div>
+    </div>
+
+    <!-- 规则设置弹窗 -->
+    <div class="modal-mask" id="ruleSettingsModal">
+        <div class="rule-modal-content">
+            <div class="modal-title">⚙️ 规则设置 ⚙️</div>
+            <div class="rule-modal-scroll">
+                <div class="rule-section">
+                    <div class="rule-section-title">加分规则</div>
+                    <div class="rule-list" id="addRuleList"></div>
+                    <div class="add-rule-box">
+                        <input type="text" id="newAddRuleName" placeholder="规则名称" class="rule-input">
+                        <input type="number" id="newAddRuleScore" placeholder="分值" class="rule-input score-input">
+                        <button class="add-rule-btn" id="addNewAddRule">新增</button>
+                    </div>
+                </div>
+                <div class="rule-section">
+                    <div class="rule-section-title">扣分规则</div>
+                    <div class="rule-list" id="minusRuleList"></div>
+                    <div class="add-rule-box">
+                        <input type="text" id="newMinusRuleName" placeholder="规则名称" class="rule-input">
+                        <input type="number" id="newMinusRuleScore" placeholder="分值（负数）" class="rule-input score-input">
+                        <button class="add-rule-btn" id="addNewMinusRule">新增</button>
+                    </div>
+                </div>
+            </div>
+            <div class="rule-modal-fixed-btn">
+                <button class="rule-close-btn" id="closeRuleSettings">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 普通提示框 -->
+    <div class="modal-mask" id="tipModal">
+        <div class="modal-content">
+            <div class="tip-text" id="tipText">提示内容</div>
+            <button class="tip-confirm-btn" id="closeTipModal">确定</button>
+        </div>
+    </div>
+
+    <!-- 确认提示框 -->
+    <div class="modal-mask" id="confirmModal">
+        <div class="modal-content">
+            <div class="confirm-text" id="confirmText">确认内容</div>
+            <div class="modal-btn-group">
+                <button class="modal-btn cancel-btn" id="cancelConfirm">取消</button>
+                <button class="tip-confirm-btn" id="confirmOk">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改分值弹窗 -->
+    <div class="modal-mask" id="editScoreModal">
+        <div class="edit-score-modal">
+            <div class="modal-title">✏️ 修改分值 ✏️</div>
+            <div class="edit-score-info" id="editScoreInfo"></div>
+            <input type="number" class="edit-score-input" id="editScoreInput" placeholder="请输入新的分值">
+            <div class="edit-score-btn-group">
+                <button class="edit-score-cancel" id="cancelEditScore">取消</button>
+                <button class="edit-score-save" id="saveEditScore">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 默认加减分规则
+        let addRules = [
+            { id: 'A1', name: '拼音书写整齐', score: 1 },
+            { id: 'A2', name: '汉字书写整齐', score: 1 },
+            { id: 'A3', name: '写完拼音主动检查', score: 1 },
+            { id: 'A4', name: '写完汉字主动检查', score: 1 },
+            { id: 'A5', name: '做一题检查一题', score: 2 },
+            { id: 'A6', name: '写完句子检查错字标点', score: 2 },
+            { id: 'A7', name: '数学做完整体检查', score: 2 },
+            { id: 'A8', name: '自查错误并主动改正', score: 3 },
+            { id: 'A9', name: '全部做完检查无漏题', score: 2 },
+            { id: 'A10', name: '读题三遍圈对关键词', score: 2 },
+            { id: 'A11', name: '被指错不哭闹自主订正', score: 3 },
+            { id: 'S1', name: '超额完成学习任务', score: 2 },
+            { id: 'S2', name: '困难任务坚持完成', score: 3 },
+            { id: 'OTHER_ADD', name: '其他加分', score: 1 }
+        ];
+
+        let minusRules = [
+            { id: 'P1', name: '中途无故离开座位', score: -1 },
+            { id: 'P2', name: '中途讲无关闲话', score: -1 },
+            { id: 'P3', name: '休息后仍中途上厕所', score: -1 },
+            { id: 'P4', name: '作业中途吃东西喝水', score: -1 },
+            { id: 'P5', name: '未检查出粗心错误', score: -2 },
+            { id: 'P6', name: '漏题未自查发现', score: -2 },
+            { id: 'P7', name: '漏圈关键词（单个）', score: -1 },
+            { id: 'P8', name: '作业期间情绪对抗哭闹', score: -2 },
+            { id: 'OTHER_MINUS', name: '其他扣分', score: -1 }
+        ];
+
+        let todayData = {
+            date: getTodayDate(),
+            coin: 0,
+            records: [],
+            isSettled: false
+        };
+
+        let weekData = [];
+        let selectedAddItem = null;
+        let selectedMinusItem = null;
+        let confirmCallback = null;
+        // 长按计时器
+        let longPressTimer = null;
+        let isLongPress = false;
+        // 当前编辑的规则信息
+        let currentEditRule = null;
+
+        init();
+
+        function getTodayDate() {
+            const now = new Date();
+            return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+        }
+
+        function getWeekDay() {
+            return new Date().getDay();
+        }
+
+        function formatTime() {
+            const now = new Date();
+            return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        function showTip(msg) {
+            document.getElementById('tipText').textContent = msg;
+            document.getElementById('tipModal').classList.add('show');
+        }
+        function closeTip() {
+            document.getElementById('tipModal').classList.remove('show');
+        }
+        function showConfirm(msg, callback) {
+            document.getElementById('confirmText').textContent = msg;
+            confirmCallback = callback;
+            document.getElementById('confirmModal').classList.add('show');
+        }
+        function closeConfirm() {
+            document.getElementById('confirmModal').classList.remove('show');
+            confirmCallback = null;
+        }
+
+        function init() {
+            loadRules();
+            loadData();
+            checkDateReset();
+            renderItemGrid();
+            renderCoin();
+            renderRecordList();
+            bindEvent();
+            bindTipEvent();
+        }
+
+        function loadRules() {
+            const savedAdd = localStorage.getItem('mlp_addRules');
+            const savedMinus = localStorage.getItem('mlp_minusRules');
+            if (savedAdd) addRules = JSON.parse(savedAdd);
+            if (savedMinus) minusRules = JSON.parse(savedMinus);
+        }
+
+        function saveRules() {
+            localStorage.setItem('mlp_addRules', JSON.stringify(addRules));
+            localStorage.setItem('mlp_minusRules', JSON.stringify(minusRules));
+        }
+
+        function loadData() {
+            const savedToday = localStorage.getItem('mlp_todayData');
+            const savedWeek = localStorage.getItem('mlp_weekData');
+            if (savedToday) todayData = JSON.parse(savedToday);
+            if (savedWeek) weekData = JSON.parse(savedWeek);
+        }
+
+        function saveData() {
+            localStorage.setItem('mlp_todayData', JSON.stringify(todayData));
+            localStorage.setItem('mlp_weekData', JSON.stringify(weekData));
+        }
+
+        function checkDateReset() {
+            const today = getTodayDate();
+            if (todayData.date !== today) {
+                weekData = weekData.filter(item => item.date !== todayData.date);
+                if (todayData.isSettled && getWeekDay() >= 1 && getWeekDay() <= 6) {
+                    weekData.push({
+                        date: todayData.date,
+                        weekDay: getWeekDay(),
+                        finalCoin: todayData.coin,
+                        records: todayData.records
+                    });
+                    saveData();
+                }
+                todayData = {
+                    date: today,
+                    coin: 0,
+                    records: [],
+                    isSettled: false
+                };
+                saveData();
+            }
+        }
+
+        function renderItemGrid() {
+            const addGrid = document.getElementById('addItemGrid');
+            addGrid.innerHTML = addRules.map(item => `
+                <button class="item-btn add-item-btn" data-id="${item.id}" data-type="add">${item.name} +${item.score}</button>
+            `).join('');
+
+            const minusGrid = document.getElementById('minusItemGrid');
+            minusGrid.innerHTML = minusRules.map(item => `
+                <button class="item-btn minus-item-btn" data-id="${item.id}" data-type="minus">${item.name} ${item.score}</button>
+            `).join('');
+        }
+
+        function renderRuleLists() {
+            const addRuleList = document.getElementById('addRuleList');
+            addRuleList.innerHTML = addRules.map((rule, index) => `
+                <div class="rule-item-with-edit" data-type="add" data-index="${index}" data-id="${rule.id}">
+                    <div class="rule-item-display">
+                        <span>${rule.name} (${rule.score > 0 ? '+' : ''}${rule.score})</span>
+                        <div class="rule-action-btns">
+                            <button class="rule-edit-btn" data-type="add" data-index="${index}">✎</button>
+                            <button class="rule-delete-btn" data-type="add" data-index="${index}">×</button>
+                        </div>
+                    </div>
+                    <div class="rule-item-edit">
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="text" class="rule-edit-input" value="${rule.name}" placeholder="规则名称">
+                            <input type="number" class="rule-edit-score" value="${rule.score}" placeholder="分值">
+                        </div>
+                        <div class="rule-edit-btns">
+                            <button class="rule-edit-cancel" data-type="add" data-index="${index}">取消</button>
+                            <button class="rule-edit-save" data-type="add" data-index="${index}">保存</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            const minusRuleList = document.getElementById('minusRuleList');
+            minusRuleList.innerHTML = minusRules.map((rule, index) => `
+                <div class="rule-item-with-edit" data-type="minus" data-index="${index}" data-id="${rule.id}">
+                    <div class="rule-item-display">
+                        <span>${rule.name} (${rule.score})</span>
+                        <div class="rule-action-btns">
+                            <button class="rule-edit-btn" data-type="minus" data-index="${index}">✎</button>
+                            <button class="rule-delete-btn" data-type="minus" data-index="${index}">×</button>
+                        </div>
+                    </div>
+                    <div class="rule-item-edit">
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="text" class="rule-edit-input" value="${rule.name}" placeholder="规则名称">
+                            <input type="number" class="rule-edit-score" value="${rule.score}" placeholder="分值">
+                        </div>
+                        <div class="rule-edit-btns">
+                            <button class="rule-edit-cancel" data-type="minus" data-index="${index}">取消</button>
+                            <button class="rule-edit-save" data-type="minus" data-index="${index}">保存</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCoin() {
+            document.getElementById('todayCoin').textContent = todayData.coin;
+            const weekTotal = weekData.reduce((sum, item) => sum + item.finalCoin, 0) + (todayData.isSettled ? todayData.coin : 0);
+            document.getElementById('weekTotalCoin').textContent = weekTotal;
+        }
+
+        function renderRecordList() {
+            const recordList = document.getElementById('recordList');
+            if (todayData.records.length === 0) {
+                recordList.innerHTML = '<div class="empty-tip">暂无记录，开始记录吧！</div>';
+                return;
+            }
+
+            recordList.innerHTML = todayData.records.map((record, index) => `
+                <div class="record-item ${record.score > 0 ? 'add-item' : 'minus-item'}">
+                    <div class="record-info">
+                        <div>${record.name} ${record.remark ? `(${record.remark})` : ''}</div>
+                        <div class="record-time">${record.time}</div>
+                    </div>
+                    <div class="record-score">${record.score > 0 ? '+' : ''}${record.score}</div>
+                    <button class="delete-btn" data-index="${index}">×</button>
+                </div>
+            `).join('');
+        }
+
+        function renderWeekStat() {
+            const statContent = document.getElementById('weekStatContent');
+            
+            let allWeekData = [...weekData];
+            if(todayData.isSettled){
+                const todayExist = allWeekData.some(item => item.date === todayData.date);
+                if(!todayExist){
+                    allWeekData.push({
+                        date: todayData.date,
+                        weekDay: getWeekDay(),
+                        finalCoin: todayData.coin,
+                        records: todayData.records
+                    });
+                }
+            }
+
+            const weekTotal = allWeekData.reduce((sum, item) => sum + item.finalCoin, 0);
+            const totalAdd = weekData.reduce((sum, item) => {
+                const addSum = item.records.filter(r => r.score > 0).reduce((s, r) => s + r.score, 0);
+                return sum + addSum;
+            }, 0) + (todayData.isSettled ? todayData.records.filter(r=>r.score>0).reduce((s,r)=>s+r.score,0) : 0);
+            const totalMinus = weekData.reduce((sum, item) => {
+                const minusSum = item.records.filter(r => r.score < 0).reduce((s, r) => s + r.score, 0);
+                return sum + minusSum;
+            }, 0) + (todayData.isSettled ? todayData.records.filter(r=>r.score<0).reduce((s,r)=>s+r.score,0) : 0);
+
+            let allRecords = [];
+            allWeekData.forEach(item => {
+                if(item.records) allRecords = allRecords.concat(item.records);
+            });
+
+            const addCount = {};
+            allRecords.filter(r => r.score > 0).forEach(r => {
+                addCount[r.name] = (addCount[r.name] || 0) + 1;
+            });
+
+            const minusCount = {};
+            allRecords.filter(r => r.score < 0).forEach(r => {
+                minusCount[r.name] = (minusCount[r.name] || 0) + 1;
+            });
+
+            const weekMap = {1:'周一',2:'周二',3:'周三',4:'周四',5:'周五',6:'周六',0:'周日'};
+            const weekOrder = [1,2,3,4,5,6,0];
+
+            let html = `
+                <div class="stat-item">
+                    <div class="stat-item-title">本周核心数据</div>
+                    <div class="stat-detail"><span>本周累计总金币</span><span>${weekTotal}</span></div>
+                    <div class="stat-detail"><span>本周总加分</span><span>+${totalAdd}</span></div>
+                    <div class="stat-detail"><span>本周总扣分</span><span>${totalMinus}</span></div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-item-title">每日明细（周一至周日）</div>
+            `;
+
+            weekOrder.forEach(day => {
+                const dayData = allWeekData.find(item => item.weekDay === day);
+                const coin = dayData ? dayData.finalCoin : 0;
+                html += `
+                    <div class="stat-detail">
+                        <span>${weekMap[day]}</span>
+                        <span>${coin > 0 ? '+' : ''}${coin} 金币</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-item-title">加分项使用次数统计</div>
+            `;
+
+            if(Object.keys(addCount).length === 0){
+                html += '<div class="stat-detail">暂无加分记录</div>';
+            } else {
+                for(let [name, count] of Object.entries(addCount)){
+                    html += `<div class="stat-detail"><span>${name}</span><span>${count} 次</span></div>`;
+                }
+            }
+
+            html += `
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-item-title">扣分项使用次数统计</div>
+            `;
+
+            if(Object.keys(minusCount).length === 0){
+                html += '<div class="stat-detail">暂无扣分记录</div>';
+            } else {
+                for(let [name, count] of Object.entries(minusCount)){
+                    html += `<div class="stat-detail"><span>${name}</span><span>${count} 次</span></div>`;
+                }
+            }
+
+            html += '</div>';
+            statContent.innerHTML = html;
+        }
+
+        function renderWeekAnalyze() {
+            const content = document.getElementById('weekAnalyzeContent');
+            
+            const groups = {};
+            weekData.forEach(day => {
+                const w = getWeekOfMonth(new Date(day.date));
+                if (!groups[w]) groups[w] = [];
+                groups[w].push(day);
+            });
+
+            const weeks = Object.values(groups).reverse();
+            const currWeek = weeks[0] || [];
+            const lastWeek = weeks[1] || [];
+
+            function countItems(weekArr) {
+                const add = {}, minus = {}, totalAdd = 0, totalMinus = 0;
+                weekArr.forEach(day => {
+                    day.records.forEach(r => {
+                        if (r.score > 0) {
+                            add[r.name] = (add[r.name] || 0) + 1;
+                        } else {
+                            minus[r.name] = (minus[r.name] || 0) + 1;
+                        }
+                    });
+                });
+                return { add, minus };
+            }
+
+            const curr = countItems(currWeek);
+            const last = countItems(lastWeek);
+
+            let html = '';
+            const hasLast = Object.keys(last.add).length + Object.keys(last.minus).length > 0;
+
+            if (!hasLast) {
+                html += `<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>`;
+            } else {
+                let good = [];
+                let bad = [];
+
+                for (let name in curr.add) {
+                    const c = curr.add[name];
+                    const l = last.add[name] || 0;
+                    if (c > l) good.push(`✅ ${name} 加分次数变多啦！`);
+                    if (c < l) bad.push(`❌ ${name} 加分次数减少了`);
+                }
+                for (let name in last.add) {
+                    if (!curr.add[name]) bad.push(`❌ ${name} 最近没有加分了`);
+                }
+
+                for (let name in curr.minus) {
+                    const c = curr.minus[name];
+                    const l = last.minus[name] || 0;
+                    if (c < l) good.push(`✅ ${name} 扣分变少，进步很大！`);
+                    if (c > l) bad.push(`❌ ${name} 扣分变多了，要注意哦`);
+                }
+                for (let name in last.minus) {
+                    if (!curr.minus[name]) good.push(`✅ ${name} 最近没有扣分，太棒了！`);
+                }
+
+                if (good.length === 0) good.push('本周暂时没有明显进步项，继续加油！');
+                if (bad.length === 0) bad.push('本周没有退步项，表现非常优秀！');
+
+                html += `<div class="analysis-box good"><div class="analysis-title">🎉 进步的地方</div>${good.join('<br>')}</div>`;
+                html += `<div class="analysis-box bad"><div class="analysis-title">⚠️ 需要改进</div>${bad.join('<br>')}</div>`;
+            }
+
+            content.innerHTML = html;
+        }
+
+        function getWeekOfMonth(date) {
+            const first = new Date(date.getFullYear(), date.getMonth(), 1);
+            return Math.ceil((date.getDate() + first.getDay()) / 7);
+        }
+
+        function bindTipEvent() {
+            document.getElementById('closeTipModal').addEventListener('click', closeTip);
+            document.getElementById('tipModal').addEventListener('click', (e) => {
+                if(e.target === e.currentTarget) closeTip();
+            });
+            document.getElementById('cancelConfirm').addEventListener('click', closeConfirm);
+            document.getElementById('confirmOk').addEventListener('click', () => {
+                if(confirmCallback) confirmCallback();
+                closeConfirm();
+            });
+            document.getElementById('confirmModal').addEventListener('click', (e) => {
+                if(e.target === e.currentTarget) closeConfirm();
+            });
+        }
+
+        // 规则分值即时修改函数（使用自定义弹窗）
+        function editRuleScore(ruleId, ruleType) {
+            const rules = ruleType === 'add' ? addRules : minusRules;
+            const rule = rules.find(item => item.id === ruleId);
+            if (!rule) return;
+
+            // 保存当前编辑的规则信息
+            currentEditRule = { id: ruleId, type: ruleType, rule: rule };
+
+            // 显示自定义弹窗
+            const infoText = `正在修改「${rule.name}」的分值\n当前分值：${rule.score}\n${ruleType === 'add' ? '请输入正整数' : '请输入负整数'}`;
+            document.getElementById('editScoreInfo').textContent = infoText;
+            document.getElementById('editScoreInput').value = rule.score;
+            document.getElementById('editScoreModal').classList.add('show');
+        }
+
+        // 保存修改分值
+        function saveEditScore() {
+            if (!currentEditRule) return;
+
+            const { id, type, rule } = currentEditRule;
+            const newScore = parseInt(document.getElementById('editScoreInput').value);
+
+            // 数值校验
+            if (isNaN(newScore)) {
+                showTip('请输入有效的数字');
+                return;
+            }
+            if (type === 'add' && newScore <= 0) {
+                showTip('加分规则必须输入正整数');
+                return;
+            }
+            if (type === 'minus' && newScore >= 0) {
+                showTip('扣分规则必须输入负整数');
+                return;
+            }
+
+            // 更新规则
+            if (type === 'add') {
+                addRules = addRules.map(item => item.id === id ? { ...item, score: newScore } : item);
+            } else {
+                minusRules = minusRules.map(item => item.id === id ? { ...item, score: newScore } : item);
+            }
+
+            // 保存并重新渲染
+            saveRules();
+            renderItemGrid();
+            renderRuleLists();
+            
+            // 关闭弹窗
+            document.getElementById('editScoreModal').classList.remove('show');
+            currentEditRule = null;
+            showTip(`「${rule.name}」分值修改成功！`);
+        }
+
+        // 取消修改分值
+        function cancelEditScore() {
+            document.getElementById('editScoreModal').classList.remove('show');
+            currentEditRule = null;
+        }
+
+        function bindEvent() {
+            // 修改分值弹窗事件绑定
+            document.getElementById('saveEditScore').addEventListener('click', saveEditScore);
+            document.getElementById('cancelEditScore').addEventListener('click', cancelEditScore);
+            document.getElementById('editScoreModal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) cancelEditScore();
+            });
+
+            // 加分规则长按
+            document.getElementById('addItemGrid').addEventListener('touchstart', (e) => {
+                const btn = e.target.closest('.add-item-btn');
+                if (!btn) return;
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    const ruleId = btn.dataset.id;
+                    editRuleScore(ruleId, 'add');
+                }, 500);
+            });
+            document.getElementById('addItemGrid').addEventListener('touchend', () => {
+                if (longPressTimer) clearTimeout(longPressTimer);
+            });
+            document.getElementById('addItemGrid').addEventListener('touchmove', () => {
+                if (longPressTimer) clearTimeout(longPressTimer);
+            });
+
+            // 扣分规则长按
+            document.getElementById('minusItemGrid').addEventListener('touchstart', (e) => {
+                const btn = e.target.closest('.minus-item-btn');
+                if (!btn) return;
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    const ruleId = btn.dataset.id;
+                    editRuleScore(ruleId, 'minus');
+                }, 500);
+            });
+            document.getElementById('minusItemGrid').addEventListener('touchend', () => {
+                if (longPressTimer) clearTimeout(longPressTimer);
+            });
+            document.getElementById('minusItemGrid').addEventListener('touchmove', () => {
+                if (longPressTimer) clearTimeout(longPressTimer);
+            });
+
+            // PC端兼容：右键修改分值
+            document.getElementById('addItemGrid').addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const btn = e.target.closest('.add-item-btn');
+                if (btn) {
+                    const ruleId = btn.dataset.id;
+                    editRuleScore(ruleId, 'add');
+                }
+            });
+            document.getElementById('minusItemGrid').addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const btn = e.target.closest('.minus-item-btn');
+                if (btn) {
+                    const ruleId = btn.dataset.id;
+                    editRuleScore(ruleId, 'minus');
+                }
+            });
+
+            // 原有单击选中功能（过滤长按）
+            document.getElementById('addItemGrid').addEventListener('click', (e) => {
+                if (isLongPress) {
+                    isLongPress = false;
+                    return;
+                }
+                const btn = e.target.closest('.add-item-btn');
+                if (btn) {
+                    document.querySelectorAll('.add-item-btn').forEach(b => {
+                        b.style.background = '#F0FFF0';
+                        b.style.color = 'var(--text-dark)';
+                    });
+                    btn.style.background = 'var(--deep-green)';
+                    btn.style.color = 'white';
+                    selectedAddItem = addRules.find(item => item.id === btn.dataset.id);
+                }
+            });
+
+            // 原有双击快速加分功能（过滤长按）
+            document.getElementById('addItemGrid').addEventListener('dblclick', (e) => {
+                if (isLongPress) return;
+                const btn = e.target.closest('.add-item-btn');
+                if (btn) {
+                    selectedAddItem = addRules.find(item => item.id === btn.dataset.id);
+                    if (!selectedAddItem) return;
+                    const remark = document.getElementById('addRemark').value;
+                    const newRecord = {
+                        id: Date.now(),
+                        name: selectedAddItem.name,
+                        score: selectedAddItem.score,
+                        remark: remark,
+                        time: formatTime()
+                    };
+                    todayData.records.unshift(newRecord);
+                    todayData.coin += selectedAddItem.score;
+                    saveData();
+                    renderCoin();
+                    renderRecordList();
+                    document.getElementById('addModal').classList.remove('show');
+                }
+            });
+
+            // 原有确认加分功能
+            document.getElementById('confirmAdd').addEventListener('click', () => {
+                if (!selectedAddItem) {
+                    showTip('请选择一个加分项');
+                    return;
+                }
+                const remark = document.getElementById('addRemark').value;
+                const newRecord = {
+                    id: Date.now(),
+                    name: selectedAddItem.name,
+                    score: selectedAddItem.score,
+                    remark: remark,
+                    time: formatTime()
+                };
+                todayData.records.unshift(newRecord);
+                todayData.coin += selectedAddItem.score;
+                saveData();
+                renderCoin();
+                renderRecordList();
+                document.getElementById('addModal').classList.remove('show');
+            });
+
+            // 原有扣分单击选中功能（过滤长按）
+            document.getElementById('minusItemGrid').addEventListener('click', (e) => {
+                if (isLongPress) {
+                    isLongPress = false;
+                    return;
+                }
+                const btn = e.target.closest('.minus-item-btn');
+                if (btn) {
+                    document.querySelectorAll('.minus-item-btn').forEach(b => {
+                        b.style.background = '#FFF0F5';
+                        b.style.color = 'var(--text-dark)';
+                    });
+                    btn.style.background = 'var(--deep-orange)';
+                    btn.style.color = 'white';
+                    selectedMinusItem = minusRules.find(item => item.id === btn.dataset.id);
+                }
+            });
+
+            // 原有双击快速扣分功能（过滤长按）
+            document.getElementById('minusItemGrid').addEventListener('dblclick', (e) => {
+                if (isLongPress) return;
+                const btn = e.target.closest('.minus-item-btn');
+                if (btn) {
+                    selectedMinusItem = minusRules.find(item => item.id === btn.dataset.id);
+                    if (!selectedMinusItem) return;
+                    const remark = document.getElementById('minusRemark').value;
+                    const newRecord = {
+                        id: Date.now(),
+                        name: selectedMinusItem.name,
+                        score: selectedMinusItem.score,
+                        remark: remark,
+                        time: formatTime()
+                    };
+                    todayData.records.unshift(newRecord);
+                    todayData.coin += selectedMinusItem.score;
+                    saveData();
+                    renderCoin();
+                    renderRecordList();
+                    document.getElementById('minusModal').classList.remove('show');
+                }
+            });
+
+            // 原有确认扣分功能
+            document.getElementById('confirmMin').addEventListener('click', () => {
+                if (!selectedMinusItem) {
+                    showTip('请选择一个扣分项');
+                    return;
+                }
+                const remark = document.getElementById('minusRemark').value;
+                const newRecord = {
+                    id: Date.now(),
+                    name: selectedMinusItem.name,
+                    score: selectedMinusItem.score,
+                    remark: remark,
+                    time: formatTime()
+                };
+                todayData.records.unshift(newRecord);
+                todayData.coin += selectedMinusItem.score;
+                saveData();
+                renderCoin();
+                renderRecordList();
+                document.getElementById('minusModal').classList.remove('show');
+            });
+
+            // 原有弹窗开关事件
+            document.getElementById('openAddModal').addEventListener('click', () => {
+                if (todayData.isSettled) {
+                    showTip('今日已结算，无法修改数据');
+                    return;
+                }
+                selectedAddItem = null;
+                document.getElementById('addRemark').value = '';
+                document.querySelectorAll('.add-item-btn').forEach(b => {
+                    b.style.background = '#F0FFF0';
+                    b.style.color = 'var(--text-dark)';
+                });
+                document.getElementById('addModal').classList.add('show');
+            });
+            document.getElementById('closeAddModal').addEventListener('click', () => {
+                document.getElementById('addModal').classList.remove('show');
+            });
+            document.getElementById('openMinusModal').addEventListener('click', () => {
+                if (todayData.isSettled) {
+                    showTip('今日已结算，无法修改数据');
+                    return;
+                }
+                selectedMinusItem = null;
+                document.getElementById('minusRemark').value = '';
+                document.querySelectorAll('.minus-item-btn').forEach(b => {
+                    b.style.background = '#FFF0F5';
+                    b.style.color = 'var(--text-dark)';
+                });
+                document.getElementById('minusModal').classList.add('show');
+            });
+            document.getElementById('closeMinusModal').addEventListener('click', () => {
+                document.getElementById('minusModal').classList.remove('show');
+            });
+
+            // 原有记录删除功能
+            document.getElementById('recordList').addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    if (todayData.isSettled) {
+                        showTip('今日已结算，无法删除记录');
+                        return;
+                    }
+                    const index = e.target.dataset.index;
+                    const record = todayData.records[index];
+                    todayData.coin -= record.score;
+                    todayData.records.splice(index, 1);
+                    saveData();
+                    renderCoin();
+                    renderRecordList();
+                }
+            });
+
+            // 原有结算、重置功能
+            document.getElementById('todaySettle').addEventListener('click', () => {
+                if (todayData.isSettled) {
+                    showTip('今日已结算，无需重复操作');
+                    return;
+                }
+                showConfirm('确认结算今日数据？结算后将锁定数据，无法修改', () => {
+                    todayData.isSettled = true;
+                    weekData = weekData.filter(item => item.date !== todayData.date);
+                    if (getWeekDay() >= 1 && getWeekDay() <= 6) {
+                        weekData.push({
+                            date: todayData.date,
+                            weekDay: getWeekDay(),
+                            finalCoin: todayData.coin,
+                            records: todayData.records
+                        });
+                    }
+                    saveData();
+                    renderCoin();
+                    showTip('今日结算完成！');
+                });
+            });
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                document.getElementById('resetChoiceModal').classList.add('show');
+            });
+            document.getElementById('closeResetModal').addEventListener('click', () => {
+                document.getElementById('resetChoiceModal').classList.remove('show');
+            });
+            document.getElementById('doTodayReset').addEventListener('click', () => {
+                showConfirm('确认重置今日数据？所有今日记录和金币将被清空', () => {
+                    todayData.coin = 0;
+                    todayData.records = [];
+                    todayData.isSettled = false;
+                    weekData = weekData.filter(item => item.date !== todayData.date);
+                    saveData();
+                    renderCoin();
+                    renderRecordList();
+                    document.getElementById('resetChoiceModal').classList.remove('show');
+                    showTip('今日数据重置完成！');
+                });
+            });
+            document.getElementById('doAllReset').addEventListener('click', () => {
+                showConfirm('确认执行全部重置？此操作将清空今日数据和所有周统计数据，且无法恢复！', () => {
+                    todayData.coin = 0;
+                    todayData.records = [];
+                    todayData.isSettled = false;
+                    weekData = [];
+                    saveData();
+                    renderCoin();
+                    renderRecordList();
+                    document.getElementById('resetChoiceModal').classList.remove('show');
+                    showTip('全部数据重置完成！');
+                });
+            });
+
+            // 原有周统计、每周分析功能
+            document.getElementById('openWeekStat').addEventListener('click', () => {
+                renderWeekStat();
+                document.getElementById('weekStatModal').classList.add('show');
+            });
+            document.getElementById('closeWeekStat').addEventListener('click', () => {
+                document.getElementById('weekStatModal').classList.remove('show');
+            });
+            document.getElementById('openWeekAnalyze').addEventListener('click', () => {
+                renderWeekAnalyze();
+                document.getElementById('weekAnalyzeModal').classList.add('show');
+            });
+            document.getElementById('closeWeekAnalyze').addEventListener('click', () => {
+                document.getElementById('weekAnalyzeModal').classList.remove('show');
+            });
+
+            // 原有弹窗点击空白关闭
+            document.querySelectorAll('.modal-mask').forEach(mask => {
+                mask.addEventListener('click', (e) => {
+                    if (e.target === mask && !['tipModal','confirmModal','editScoreModal'].includes(mask.id)) {
+                        mask.classList.remove('show');
+                    }
+                });
+            });
+
+            // 原有规则设置功能
+            document.getElementById('ruleSettings').addEventListener('click', () => {
+                renderRuleLists();
+                document.getElementById('ruleSettingsModal').classList.add('show');
+            });
+            document.getElementById('closeRuleSettings').addEventListener('click', () => {
+                document.getElementById('ruleSettingsModal').classList.remove('show');
+            });
+            document.getElementById('addRuleList').addEventListener('click', (e) => handleRuleAction(e, 'add'));
+            document.getElementById('minusRuleList').addEventListener('click', (e) => handleRuleAction(e, 'minus'));
+
+            // 原有新增加分规则
+            document.getElementById('addNewAddRule').addEventListener('click', () => {
+                const name = document.getElementById('newAddRuleName').value.trim();
+                const score = parseInt(document.getElementById('newAddRuleScore').value);
+                if (!name) {
+                    showTip('请输入规则名称');
+                    return;
+                }
+                if (isNaN(score) || score <= 0) {
+                    showTip('请输入有效的正整数分值');
+                    return;
+                }
+                const newRule = {
+                    id: 'ADD_' + Date.now(),
+                    name: name,
+                    score: score
+                };
+                addRules.push(newRule);
+                saveRules();
+                renderRuleLists();
+                renderItemGrid();
+                document.getElementById('newAddRuleName').value = '';
+                document.getElementById('newAddRuleScore').value = '';
+                showTip('加分规则新增成功！');
+            });
+
+            // 原有新增扣分规则
+            document.getElementById('addNewMinusRule').addEventListener('click', () => {
+                const name = document.getElementById('newMinusRuleName').value.trim();
+                const score = parseInt(document.getElementById('newMinusRuleScore').value);
+                if (!name) {
+                    showTip('请输入规则名称');
+                    return;
+                }
+                if (isNaN(score) || score >= 0) {
+                    showTip('请输入有效的负整数分值');
+                    return;
+                }
+                const newRule = {
+                    id: 'MINUS_' + Date.now(),
+                    name: name,
+                    score: score
+                };
+                minusRules.push(newRule);
+                saveRules();
+                renderRuleLists();
+                renderItemGrid();
+                document.getElementById('newMinusRuleName').value = '';
+                document.getElementById('newMinusRuleScore').value = '';
+                showTip('扣分规则新增成功！');
+            });
+        }
+
+        // 原有规则操作函数
+        function handleRuleAction(e, type) {
+            const target = e.target;
+            const rules = type === 'add' ? addRules : minusRules;
+            const listId = type === 'add' ? 'addRuleList' : 'minusRuleList';
+
+            if (target.classList.contains('rule-edit-btn')) {
+                const index = parseInt(target.dataset.index);
+                const ruleItem = document.querySelector(`#${listId} .rule-item-with-edit[data-type="${type}"][data-index="${index}"]`);
+                ruleItem.classList.add('editing');
+            }
+
+            if (target.classList.contains('rule-edit-cancel')) {
+                const index = parseInt(target.dataset.index);
+                const ruleItem = document.querySelector(`#${listId} .rule-item-with-edit[data-type="${type}"][data-index="${index}"]`);
+                ruleItem.classList.remove('editing');
+            }
+
+            if (target.classList.contains('rule-edit-save')) {
+                const index = parseInt(target.dataset.index);
+                const ruleItem = document.querySelector(`#${listId} .rule-item-with-edit[data-type="${type}"][data-index="${index}"]`);
+                const newName = ruleItem.querySelector('.rule-edit-input').value.trim();
+                const newScore = parseInt(ruleItem.querySelector('.rule-edit-score').value);
+
+                if (!newName) {
+                    showTip('规则名称不能为空');
+                    return;
+                }
+                if (isNaN(newScore)) {
+                    showTip('请输入有效的分值');
+                    return;
+                }
+                if (type === 'add' && newScore <= 0) {
+                    showTip('加分规则分值必须为正整数');
+                    return;
+                }
+                if (type === 'minus' && newScore >= 0) {
+                    showTip('扣分规则分值必须为负整数');
+                    return;
+                }
+
+                if (type === 'add') {
+                    addRules[index] = { ...addRules[index], name: newName, score: newScore };
+                } else {
+                    minusRules[index] = { ...minusRules[index], name: newName, score: newScore };
+                }
+
+                saveRules();
+                renderRuleLists();
+                renderItemGrid();
+                showTip('规则修改成功！');
+            }
+
+            if (target.classList.contains('rule-delete-btn')) {
+                const index = parseInt(target.dataset.index);
+                const ruleName = rules[index].name;
+                showConfirm(`确认删除${type === 'add' ? '加分' : '扣分'}规则「${ruleName}」？`, () => {
+                    if (type === 'add') {
+                        addRules.splice(index, 1);
+                    } else {
+                        minusRules.splice(index, 1);
+                    }
+                    saveRules();
+                    renderRuleLists();
+                    renderItemGrid();
+                    showTip('规则删除成功！');
+                });
+            }
+        }
+    </script>
+</body>
+</html>
