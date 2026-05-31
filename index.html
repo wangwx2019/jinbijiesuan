@@ -999,7 +999,7 @@
     <div class="modal-mask" id="syncModal">
         <div class="modal-content" style="max-width:380px;padding:24px 20px;">
             <div class="modal-title">☁️ GitHub 同步</div>
-            <p style="font-size:14px;color:#64748b;margin:10px 0 14px;line-height:1.5;">将数据同步到 <strong>wangwx2019/jinbitongji</strong> 仓库，多设备共享进度。</p>
+            <p style="font-size:14px;color:#64748b;margin:10px 0 14px;line-height:1.5;">将数据同步到 <strong>wangwx2019/jinbijiesuan</strong> 仓库，多设备共享进度。</p>
             <input type="password" id="syncTokenInput" placeholder="GitHub Personal Access Token" style="width:100%;padding:12px 14px;border:2px solid #d0d9e6;border-radius:12px;font-size:14px;outline:none;margin-bottom:6px;box-sizing:border-box;" oninput="localStorage.setItem('github_token_gold', this.value.trim())">
             <p style="font-size:12px;color:#94a3b8;margin-bottom:14px;line-height:1.4;">需要 <strong>repo</strong> 权限。可在 <a href="https://github.com/settings/tokens" target="_blank" style="color:#3B82F6;text-decoration:none;">GitHub Token设置</a> 生成。</p>
             <div id="syncStatus" style="font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;">就绪</div>
@@ -1053,8 +1053,8 @@
         let selectedMinusItem = null;
         let confirmCallback = null;
         // GitHub 仓库配置
-        const GOLD_GITHUB_REPO = 'wangwx2019/jinbitongji';
-        const GOLD_GITHUB_PATH = 'data/jinbitongji-data.json';
+        const GOLD_GITHUB_REPO = 'wangwx2019/jinbijiesuan';
+        const GOLD_GITHUB_PATH = 'data/jinbijiesuan-data.json';
         // 长按计时器
         let longPressTimer = null;
         let isLongPress = false;
