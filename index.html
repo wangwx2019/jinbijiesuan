@@ -10,6 +10,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="xiaomabaoli.png">
     <link rel="icon" type="image/png" sizes="16x16" href="xiaomabaoli.png">
     
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -743,6 +744,64 @@
             color: #483D8B;
         }
 
+        /* 每周分析图表样式 */
+        .week-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(147,112,219,0.15);
+        }
+        .week-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--main-purple);
+        }
+        .chart-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .chart-box {
+            flex: 1;
+            min-width: 140px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            padding: 12px;
+            position: relative;
+        }
+        .chart-box-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-align: center;
+            color: var(--text-dark);
+        }
+        .chart-toggle-bar {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .chart-toggle-btn {
+            padding: 8px 20px;
+            border: 2px solid var(--main-purple);
+            border-radius: 20px;
+            background: white;
+            color: var(--main-purple);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .chart-toggle-btn:active {
+            background: var(--light-purple);
+        }
+        .chart-empty-tip {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            padding: 30px 10px;
+        }
         /* 修改分值弹窗专用样式 */
         .edit-score-modal {
             width: 100%;
@@ -1166,14 +1225,17 @@
                     todayData.isSettled = true;
                 }
                 weekData = weekData.filter(item => item.date !== todayData.date);
-                if (todayData.isSettled && getWeekDay() >= 1 && getWeekDay() <= 6) {
-                    weekData.push({
-                        date: todayData.date,
-                        weekDay: getWeekDay(),
-                        finalCoin: todayData.coin,
-                        records: todayData.records
-                    });
-                    saveData();
+                if (todayData.isSettled) {
+                    const savedWeekDay = new Date(todayData.date).getDay();
+                    if (savedWeekDay >= 1 && savedWeekDay <= 6) {
+                        weekData.push({
+                            date: todayData.date,
+                            weekDay: savedWeekDay,
+                            finalCoin: todayData.coin,
+                            records: todayData.records
+                        });
+                        saveData();
+                    }
                 }
                 todayData = {
                     date: today,
@@ -1302,10 +1364,27 @@
             `).join('');
         }
 
+        function getMondayOfWeek() {
+            const now = new Date();
+            const day = now.getDay();
+            const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(now.getFullYear(), now.getMonth(), diff);
+        }
+
         function renderWeekStat() {
             const statContent = document.getElementById('weekStatContent');
             
             let allWeekData = [...weekData];
+            // 只显示当前周的数据（周一 ~ 周日）
+            const mon = getMondayOfWeek();
+            const sun = new Date(mon);
+            sun.setDate(mon.getDate() + 6);
+            allWeekData = allWeekData.filter(item => {
+                const parts = item.date.split('-');
+                const d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+                return d >= mon && d <= sun;
+            });
+
             // 始终包含今日数据（无论是否结算），确保周统计立即可见
             const todayExist = allWeekData.some(item => item.date === todayData.date);
             if(!todayExist && todayData.records.length > 0){
@@ -1318,14 +1397,14 @@
             }
 
             const weekTotal = allWeekData.reduce((sum, item) => sum + item.finalCoin, 0);
-            const totalAdd = weekData.reduce((sum, item) => {
+            const totalAdd = allWeekData.reduce((sum, item) => {
                 const addSum = item.records.filter(r => r.score > 0).reduce((s, r) => s + r.score, 0);
                 return sum + addSum;
-            }, 0) + (todayData.isSettled ? todayData.records.filter(r=>r.score>0).reduce((s,r)=>s+r.score,0) : 0);
-            const totalMinus = weekData.reduce((sum, item) => {
+            }, 0);
+            const totalMinus = allWeekData.reduce((sum, item) => {
                 const minusSum = item.records.filter(r => r.score < 0).reduce((s, r) => s + r.score, 0);
                 return sum + minusSum;
-            }, 0) + (todayData.isSettled ? todayData.records.filter(r=>r.score<0).reduce((s,r)=>s+r.score,0) : 0);
+            }, 0);
 
             let allRecords = [];
             allWeekData.forEach(item => {
@@ -1402,14 +1481,100 @@
             statContent.innerHTML = html;
         }
 
+        // ===== 每周分析（含 Chart.js 图表） =====
+        let weekChartType = 'pie';
+        let weekChartInstances = [];
+
+        function destroyAllCharts() {
+            weekChartInstances.forEach(c => { try { c.destroy(); } catch(e) {} });
+            weekChartInstances = [];
+        }
+
+        function getWeekRange(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const mon = new Date(d);
+            mon.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+            const sun = new Date(mon);
+            sun.setDate(mon.getDate() + 6);
+            const key = `${mon.getFullYear()}-${mon.getMonth()+1}-${mon.getDate()}`;
+            return { start: mon, end: sun, key };
+        }
+
+        function formatDate(d) {
+            return `${d.getMonth()+1}月${d.getDate()}日`;
+        }
+
+        function buildWeekGroups(data) {
+            const groups = {};
+            data.forEach(item => {
+                const parts = item.date.split('-');
+                const d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+                const wr = getWeekRange(d);
+                if (!groups[wr.key]) {
+                    groups[wr.key] = { start: wr.start, end: wr.end, entries: [] };
+                }
+                groups[wr.key].entries.push(item);
+            });
+            return Object.values(groups).sort((a, b) => a.start - b.start);
+        }
+
+        function countItems(weekArr) {
+            const add = {}, minus = {};
+            weekArr.forEach(day => {
+                (day.records || []).forEach(r => {
+                    if (r.score > 0) {
+                        add[r.name] = (add[r.name] || 0) + 1;
+                    } else {
+                        minus[r.name] = (minus[r.name] || 0) + 1;
+                    }
+                });
+            });
+            return { add, minus };
+        }
+
+        function createWeekChart(canvasId, type, labels, data, label, colors) {
+            const el = document.getElementById(canvasId);
+            if (!el) return;
+            const ctx = el.getContext('2d');
+            const isPie = type === 'pie';
+            const chart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: '#fff',
+                        borderWidth: isPie ? 2 : 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: isPie, position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} 次` } }
+                    },
+                    scales: isPie ? {} : {
+                        y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+                        x: { ticks: { maxRotation: 45, font: { size: 10 } } }
+                    }
+                }
+            });
+            weekChartInstances.push(chart);
+        }
+
         function renderWeekAnalyze() {
             const content = document.getElementById('weekAnalyzeContent');
-            
-            // 合并 weekData 与今日数据（未结算也纳入），否则每周分析永远为空
+            destroyAllCharts();
+
+            // 合并 weekData 与今日数据
             let allDataForAnalysis = [...weekData];
-            if(todayData.records.length > 0){
+            if (todayData.records.length > 0) {
                 const todayIncluded = allDataForAnalysis.some(item => item.date === todayData.date);
-                if(!todayIncluded){
+                if (!todayIncluded) {
                     allDataForAnalysis.push({
                         date: todayData.date,
                         weekDay: getWeekDay(),
@@ -1418,62 +1583,90 @@
                     });
                 }
             }
-            
-            const groups = {};
-            allDataForAnalysis.forEach(day => {
-                const w = getWeekOfMonth(new Date(day.date));
-                if (!groups[w]) groups[w] = [];
-                groups[w].push(day);
-            });
 
-            const weeks = Object.values(groups).reverse();
-            const currWeek = weeks[0] || [];
-            const lastWeek = weeks[1] || [];
-
-            function countItems(weekArr) {
-                const add = {}, minus = {}, totalAdd = 0, totalMinus = 0;
-                weekArr.forEach(day => {
-                    day.records.forEach(r => {
-                        if (r.score > 0) {
-                            add[r.name] = (add[r.name] || 0) + 1;
-                        } else {
-                            minus[r.name] = (minus[r.name] || 0) + 1;
-                        }
-                    });
-                });
-                return { add, minus };
+            const weekGroups = buildWeekGroups(allDataForAnalysis);
+            if (weekGroups.length === 0) {
+                content.innerHTML = '<div class="chart-empty-tip">暂无每周数据，开始记录吧！</div>';
+                return;
             }
 
-            const curr = countItems(currWeek);
-            const last = countItems(lastWeek);
-
             let html = '';
-            const hasLast = Object.keys(last.add).length + Object.keys(last.minus).length > 0;
 
-            if (!hasLast) {
-                html += `<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>`;
-            } else {
-                let good = [];
-                let bad = [];
+            // 图表切换按钮
+            const toggleLabel = weekChartType === 'pie' ? '切换柱状图' : '切换饼图';
+            const toggleIcon = weekChartType === 'pie' ? '📊' : '🥧';
+            html += `<div class="chart-toggle-bar"><button class="chart-toggle-btn" id="chartTypeToggle">${toggleIcon} ${toggleLabel}</button></div>`;
 
-                for (let name in curr.add) {
-                    const c = curr.add[name];
-                    const l = last.add[name] || 0;
+            // 每张图使用唯一 canvas id
+            let chartIdx = 0;
+
+            // 颜色方案
+            const addColors = ['#3CB371','#66CDAA','#8FBC8F','#20B2AA','#48D1CC','#7CCD7C','#2E8B57','#00C78C'];
+            const minusColors = ['#FF69B4','#FFB6C1','#FFA07A','#F08080','#FF7F50','#DB7093','#E9967A','#FA8072'];
+
+            // 输出所有历史周图表（最新的在前面）
+            const reversed = [...weekGroups].reverse();
+            reversed.forEach((wg, wi) => {
+                const totalCoin = wg.entries.reduce((s, e) => s + (e.finalCoin || 0), 0);
+                html += `<div class="week-card">`;
+                html += `<div class="week-card-title">📅 ${formatDate(wg.start)} ~ ${formatDate(wg.end)}（共 ${totalCoin} 金币）</div>`;
+                html += `<div class="chart-row">`;
+
+                const addId = `chartAdd_${wi}`;
+                const minusId = `chartMinus_${wi}`;
+                const counts = countItems(wg.entries);
+                const addNames = Object.keys(counts.add);
+                const minusNames = Object.keys(counts.minus);
+
+                // 加分图
+                html += `<div class="chart-box"><div class="chart-box-title">✅ 加分统计</div>`;
+                if (addNames.length === 0) {
+                    html += `<div class="chart-empty-tip">暂无加分记录</div>`;
+                } else {
+                    html += `<canvas id="${addId}"></canvas>`;
+                }
+                html += `</div>`;
+
+                // 扣分图
+                html += `<div class="chart-box"><div class="chart-box-title">❌ 扣分统计</div>`;
+                if (minusNames.length === 0) {
+                    html += `<div class="chart-empty-tip">暂无扣分记录</div>`;
+                } else {
+                    html += `<canvas id="${minusId}"></canvas>`;
+                }
+                html += `</div>`;
+
+                html += `</div></div>`;
+                chartIdx = wi;
+            });
+
+            // 本周 vs 上周文字对比分析
+            const currWeek = weekGroups[weekGroups.length - 1];
+            const lastWeek = weekGroups.length >= 2 ? weekGroups[weekGroups.length - 2] : null;
+
+            if (lastWeek) {
+                const currCounts = countItems(currWeek.entries);
+                const lastCounts = countItems(lastWeek.entries);
+
+                let good = [], bad = [];
+
+                for (let name in currCounts.add) {
+                    const c = currCounts.add[name];
+                    const l = lastCounts.add[name] || 0;
                     if (c > l) good.push(`✅ ${name} 加分次数变多啦！`);
                     if (c < l) bad.push(`❌ ${name} 加分次数减少了`);
                 }
-                for (let name in last.add) {
-                    if (!curr.add[name]) bad.push(`❌ ${name} 最近没有加分了`);
+                for (let name in lastCounts.add) {
+                    if (!currCounts.add[name]) bad.push(`❌ ${name} 最近没有加分了`);
                 }
-
-                for (let name in curr.minus) {
-                    const c = curr.minus[name];
-                    const l = last.minus[name] || 0;
+                for (let name in currCounts.minus) {
+                    const c = currCounts.minus[name];
+                    const l = lastCounts.minus[name] || 0;
                     if (c < l) good.push(`✅ ${name} 扣分变少，进步很大！`);
                     if (c > l) bad.push(`❌ ${name} 扣分变多了，要注意哦`);
                 }
-                for (let name in last.minus) {
-                    if (!curr.minus[name]) good.push(`✅ ${name} 最近没有扣分，太棒了！`);
+                for (let name in lastCounts.minus) {
+                    if (!currCounts.minus[name]) good.push(`✅ ${name} 最近没有扣分，太棒了！`);
                 }
 
                 if (good.length === 0) good.push('本周暂时没有明显进步项，继续加油！');
@@ -1481,14 +1674,48 @@
 
                 html += `<div class="analysis-box good"><div class="analysis-title">🎉 进步的地方</div>${good.join('<br>')}</div>`;
                 html += `<div class="analysis-box bad"><div class="analysis-title">⚠️ 需要改进</div>${bad.join('<br>')}</div>`;
+            } else {
+                html += `<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>`;
             }
 
             content.innerHTML = html;
-        }
 
-        function getWeekOfMonth(date) {
-            const first = new Date(date.getFullYear(), date.getMonth(), 1);
-            return Math.ceil((date.getDate() + first.getDay()) / 7);
+            // 绘制图表——使用 setTimeout 确保 DOM 渲染完成
+            setTimeout(() => {
+                reversed.forEach((wg, wi) => {
+                    const counts = countItems(wg.entries);
+                    const addNames = Object.keys(counts.add);
+                    const minusNames = Object.keys(counts.minus);
+
+                    const addId = `chartAdd_${wi}`;
+                    const minusId = `chartMinus_${wi}`;
+
+                    if (addNames.length > 0) {
+                        createWeekChart(addId, weekChartType, addNames,
+                            addNames.map(n => counts.add[n]),
+                            '加分次数',
+                            addNames.map((_, i) => addColors[i % addColors.length]));
+                    }
+                    if (minusNames.length > 0) {
+                        createWeekChart(minusId, weekChartType, minusNames,
+                            minusNames.map(n => counts.minus[n]),
+                            '扣分次数',
+                            minusNames.map((_, i) => minusColors[i % minusColors.length]));
+                    }
+                });
+            }, 50);
+
+            // 绑定切换按钮事件
+            const toggleBtn = document.getElementById('chartTypeToggle');
+            if (toggleBtn) {
+                // 移除旧绑定（克隆替换法）
+                const newBtn = toggleBtn.cloneNode(true);
+                toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
+                newBtn.addEventListener('click', () => {
+                    weekChartType = weekChartType === 'pie' ? 'bar' : 'pie';
+                    renderWeekAnalyze();
+                });
+            }
         }
 
         function bindTipEvent() {
