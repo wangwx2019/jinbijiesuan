@@ -365,197 +365,138 @@
             pointer-events: none;
         }
 
-        /* 左滑删除 */
-        .swipe-wrap {
-            position: relative;
-            overflow: hidden;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            touch-action: pan-y;
-        }
-        .swipe-wrap:last-child {
-            margin-bottom: 0;
-        }
-        .swipe-reveal {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 80px;
-            height: 100%;
-            background: #FF4444;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 0 12px 12px 0;
-            pointer-events: none;
+        @media (max-width: 420px) {
+            .rule-item-with-edit {
+                padding: 12px;
+            }
+            .rule-item-display .rule-name-text {
+                font-size: 14px;
+            }
+            .rule-item-edit > div[style*="flex"] {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .rule-item-edit input {
+                width: 100%;
+                max-width: none;
+                box-sizing: border-box;
+            }
+            .rule-edit-score {
+                width: 100%;
+            }
+            .rule-edit-btns {
+                justify-content: stretch;
+            }
+            .rule-edit-btns button {
+                flex: 1;
+                text-align: center;
+            }
         }
 
-        @keyframes rule-slide-in {
-            from {
-                opacity: 0;
-                transform: translateY(-16px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* 规则区域布局 */
+        .rule-section {
+            margin-bottom: 20px;
         }
-        @keyframes rule-slide-out {
-            0% {
-                opacity: 1;
-                transform: translateY(0);
-                max-height: 200px;
-                padding: 14px 16px;
-                margin-bottom: 10px;
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-12px);
-                max-height: 0;
-                padding-top: 0;
-                padding-bottom: 0;
-                margin-bottom: 0;
-            }
+        .rule-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
         }
+        .rule-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 规则项显示区 */
         .rule-item-display {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            width: 100%;
             gap: 8px;
-        }
-        .rule-item-display .rule-name-text {
-            flex: 1;
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--text-dark);
-            min-width: 0;
-            word-break: break-all;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .rule-score {
-            font-weight: 700;
-            font-size: 16px;
-            white-space: nowrap;
-        }
-        .rule-score-add {
-            color: var(--deep-green);
-        }
-        .rule-score-minus {
-            color: #FF4500;
-        }
-        .drag-handle {
-            flex-shrink: 0;
-            color: #ccc;
-            font-size: 18px;
-            letter-spacing: -4px;
-            padding: 4px 6px 4px 2px;
-            cursor: grab;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            transition: color 0.2s ease;
-        }
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-        .rule-item-with-edit.dragging {
-            opacity: 0.85;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-            z-index: 10;
-            transform: scale(1.02);
-        }
-        .rule-item-with-edit.drag-over {
-            border-color: var(--main-purple);
-            border-style: dashed;
-        }
-        .rule-item-with-edit.dragging .drag-handle {
-            color: var(--main-purple);
+            width: 100%;
         }
 
+        /* 规则操作按钮 */
         .rule-action-btns {
             display: flex;
-            gap: 8px;
+            gap: 4px;
             flex-shrink: 0;
         }
         .rule-edit-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
             border: none;
-            background: #F0ECFF;
+            border-radius: 8px;
+            background: var(--light-purple);
             color: var(--main-purple);
             font-size: 14px;
-            font-weight: 700;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
             transition: all 0.15s ease;
         }
         .rule-edit-btn:active {
-            background: #ddd6ff;
+            transform: scale(0.9);
         }
         .rule-delete-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
             border: none;
-            background: #FFE4E1;
-            color: #FF4500;
-            font-size: 16px;
-            font-weight: 700;
+            border-radius: 8px;
+            background: #ffe8e8;
+            color: #FF4444;
+            font-size: 18px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
             transition: all 0.15s ease;
+            font-weight: 700;
         }
         .rule-delete-btn:active {
-            background: #ffcbc6;
+            transform: scale(0.9);
         }
+
+        /* 编辑输入框 */
         .rule-edit-input {
             flex: 1;
-            min-width: 80px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: 2px solid var(--light-purple);
-            font-size: 15px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1.5px solid var(--light-purple);
+            font-size: 14px;
             outline: none;
-            -webkit-appearance: none;
+            min-width: 0;
+        }
+        .rule-edit-input:focus {
+            border-color: var(--main-purple);
         }
         .rule-edit-score {
-            width: 80px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: 2px solid var(--light-purple);
-            font-size: 15px;
+            width: 70px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1.5px solid var(--light-purple);
+            font-size: 14px;
             outline: none;
-            -webkit-appearance: none;
+            text-align: center;
+        }
+        .rule-edit-score:focus {
+            border-color: var(--main-purple);
         }
         .rule-edit-btns {
             display: flex;
-            gap: 10px;
-            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 6px;
         }
-        .rule-edit-btns button {
-            padding: 8px 18px;
-            border-radius: 10px;
+        .rule-edit-cancel, .rule-edit-save {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
             border: none;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            min-height: 38px;
             transition: all 0.15s ease;
-        }
-        .rule-edit-btns button:active {
-            transform: scale(0.96);
         }
         .rule-edit-cancel {
             background: #f0f0f0;
@@ -565,167 +506,197 @@
             background: var(--main-purple);
             color: white;
         }
+        .rule-edit-cancel:active, .rule-edit-save:active {
+            transform: scale(0.96);
+        }
+
+        /* 编辑区过渡动画 */
         .rule-item-edit {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
             max-height: 0;
             overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.2s ease, margin 0.3s ease;
             opacity: 0;
-            transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.2s ease;
         }
-        .rule-item-with-edit.editing .rule-item-display {
-            opacity: 0;
-            pointer-events: none;
-            position: absolute;
-        }
-        .rule-item-with-edit.editing .rule-item-edit {
+        .rule-item-edit.editing {
             max-height: 160px;
             opacity: 1;
         }
 
-        /* 规则空状态 */
+        /* 空状态样式 */
         .rule-empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 36px 20px;
             text-align: center;
+            padding: 30px 10px;
+            color: #999;
         }
         .rule-empty-icon {
-            font-size: 36px;
+            font-size: 40px;
             margin-bottom: 10px;
-            opacity: 0.6;
         }
         .rule-empty-text {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
+            color: #666;
         }
         .rule-empty-hint {
             font-size: 13px;
-            color: #999;
-            line-height: 1.4;
+            color: #aaa;
         }
-        @media (max-width: 420px) {
-            .rule-empty-state {
-                padding: 28px 16px;
-            }
-            .rule-empty-icon {
-                font-size: 30px;
-            }
-            .rule-empty-text {
-                font-size: 15px;
-            }
+
+        /* 分值颜色 */
+        .rule-score {
+            font-weight: 700;
         }
-        /* 条目网格 */
-        .item-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+        .rule-score-add {
+            color: var(--add-green);
+        }
+        .rule-score-minus {
+            color: #FF4500;
+        }
+
+        /* 拖拽手柄 */
+        .drag-handle {
+            cursor: grab;
+            color: #ccc;
+            font-size: 16px;
+            letter-spacing: -1px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            padding: 4px 2px;
+            flex-shrink: 0;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        .rule-item-with-edit.dragging {
+            opacity: 0.5;
+            border-style: dashed;
+        }
+        .rule-item-with-edit.drag-over {
+            border-color: var(--main-purple);
+            background: #f0edff;
+        }
+
+        /* 动画关键帧 */
+        @keyframes rule-slide-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes rule-slide-out {
+            from { opacity: 1; transform: translateY(0); max-height: 100px; }
+            to { opacity: 0; transform: translateY(-10px); max-height: 0; padding: 0; margin: 0; }
+        }
+
+        /* 添加规则触发按钮 */
+        .add-rule-trigger {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px dashed var(--light-purple);
+            background: transparent;
+            color: var(--main-purple);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+            text-align: center;
+        }
+        .add-rule-trigger:active {
+            background: var(--light-purple);
+            border-color: var(--main-purple);
+        }
+
+        /* 底部弹出面板（新增规则用） */
+        .bottom-sheet {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .modal-mask.show .bottom-sheet {
+            transform: translateY(0);
+        }
+        .bottom-sheet-handle {
+            width: 40px;
+            height: 4px;
+            border-radius: 2px;
+            background: #ddd;
+            margin: 0 auto 16px;
+        }
+        .bottom-sheet-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-align: center;
             margin-bottom: 20px;
         }
-
-        .item-btn {
-            padding: 12px 8px;
+        .bottom-sheet-body {
+            margin-bottom: 20px;
+        }
+        .sheet-input {
+            width: 100%;
+            padding: 12px 14px;
             border-radius: 12px;
             border: 2px solid var(--light-purple);
-            background: var(--light-purple);
-            color: var(--text-dark);
-            font-size: 13px;
-            font-weight: 600;
-            text-align: center;
-            transition: all 0.2s ease;
-            word-break: break-all;
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+            -webkit-appearance: none;
         }
-
-        .item-btn:active {
-            transform: scale(0.95);
+        .sheet-input:focus {
+            border-color: var(--main-purple);
+        }
+        .sheet-score-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 12px;
+        }
+        .sheet-score {
+            flex: 0.5;
+            min-width: 80px;
+        }
+        .sheet-score-hint {
+            font-size: 12px;
+            color: #999;
+        }
+        .bottom-sheet-btns {
+            display: flex;
+            gap: 12px;
+        }
+        .sheet-btn {
+            flex: 1;
+            height: 48px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .sheet-btn:active {
+            transform: scale(0.97);
+        }
+        .sheet-btn-cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+        .sheet-btn-save {
             background: var(--main-purple);
             color: white;
         }
 
-        .add-item-btn {
-            border-color: var(--add-green);
-            background: #F0FFF0;
-        }
-
-        .add-item-btn:active {
-            background: var(--deep-green);
-        }
-
-        .minus-item-btn {
-            border-color: var(--minus-orange);
-            background: #FFF0F5;
-        }
-
-        .minus-item-btn:active {
-            background: var(--deep-orange);
-        }
-
-        /* 备注输入框 */
-        .remark-input {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            border: 2px solid var(--light-purple);
-            font-size: 15px;
-            margin-bottom: 0;
-            outline: none;
-        }
-
-        .remark-input:focus {
-            border-color: var(--main-purple);
-        }
-
-        /* 弹窗按钮组 */
-        .modal-btn-group {
-            display: flex;
-            gap: 12px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            height: 50px;
-            border-radius: 16px;
-            border: none;
-            font-size: 16px;
-            font-weight: 700;
-            transition: all 0.2s ease;
-        }
-
-        .modal-btn:active {
-            transform: scale(0.96);
-        }
-
-        .cancel-btn {
-            background: #F5F5F5;
-            color: #666;
-        }
-
-        .confirm-add-btn {
-            background: linear-gradient(135deg, var(--add-green) 0%, var(--deep-green) 100%);
-            color: white;
-        }
-
-        .confirm-minus-btn {
-            background: linear-gradient(135deg, var(--minus-orange) 0%, var(--deep-orange) 100%);
-            color: white;
-        }
-
-        #weekStatContent, #weekAnalyzeContent {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        /* 全屏页面样式（替代弹窗） */
+        /* 全屏页面样式 */
         .page-view {
             position: fixed;
             top: 0;
@@ -782,18 +753,17 @@
             padding: 20px 16px;
         }
 
+        /* 统计项卡片 */
         .stat-item {
             padding: 12px 16px;
             border-radius: 12px;
             background: var(--light-purple);
             margin-bottom: 10px;
         }
-
         .stat-item-title {
             font-weight: 700;
             margin-bottom: 8px;
         }
-
         .stat-detail {
             display: flex;
             justify-content: space-between;
@@ -801,187 +771,251 @@
             margin-bottom: 4px;
         }
 
-        /* 重置选择弹窗样式 */
-        .reset-choice-btn {
-            width: 100%;
-            height: 60px;
-            border-radius: 16px;
-            border: none;
-            font-size: 18px;
-            font-weight: 700;
-            transition: all 0.2s ease;
-            margin-bottom: 12px;
-        }
-
-        .reset-today-btn {
-            background: linear-gradient(135deg, #FFE4E1 0%, #FF69B4 100%);
-            color: white;
-        }
-
-        .reset-all-btn {
-            background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
-            color: white;
-        }
-
-        /* 规则设置页面样式（移动端适配） */
-        .rule-section {
-            margin-bottom: 28px;
-        }
-
-        .rule-section-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 14px;
-            color: var(--main-purple);
-            padding: 0 4px;
-        }
-
-        .rule-list {
-            overflow-y: auto;
-            margin-bottom: 14px;
-            border: 2px solid var(--light-purple);
-            border-radius: 14px;
-            padding: 12px;
-            background: rgba(255,255,255,0.6);
-        }
-
-        /* 添加规则触发按钮 */
-        .add-rule-trigger {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            border-radius: 12px;
-            border: 2px dashed var(--light-purple);
-            background: transparent;
-            color: var(--main-purple);
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-            margin-top: -2px;
-        }
-        .add-rule-trigger:active {
-            background: var(--light-purple);
-            border-style: solid;
-        }
-
-        /* 底部弹出面板 (Bottom Sheet) */
-        .bottom-sheet {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-radius: 20px 20px 0 0;
-            padding: 12px 24px 30px;
-            z-index: 10001;
-            transform: translateY(100%);
-            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-            box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
-            max-height: 80vh;
-        }
-        #addRuleSheet.show .bottom-sheet {
-            transform: translateY(0);
-        }
-        .bottom-sheet-handle {
-            width: 36px;
-            height: 4px;
-            border-radius: 2px;
-            background: #ddd;
-            margin: 0 auto 16px;
-        }
-        .bottom-sheet-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .bottom-sheet-body {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-        .sheet-input {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: 12px;
-            border: 2px solid var(--light-purple);
-            font-size: 16px;
-            outline: none;
-            box-sizing: border-box;
-            -webkit-appearance: none;
-        }
-        .sheet-input:focus {
-            border-color: var(--main-purple);
-        }
-        .sheet-score-row {
+        /* 周导航 */
+        .week-nav {
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 12px;
         }
-        .sheet-score {
-            flex: 1;
-            max-width: 120px;
+        .week-nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--main-purple);
+            background: white;
+            color: var(--main-purple);
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
         }
-        .sheet-score-hint {
+        .week-nav-btn:active {
+            background: var(--light-purple);
+            transform: scale(0.92);
+        }
+        .week-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: default;
+            pointer-events: none;
+        }
+        .week-nav-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        /* 核心数据英雄样式 */
+        .stat-hero {
+            text-align: center;
+            padding: 24px 20px;
+            background: linear-gradient(135deg, var(--light-purple) 0%, #f5f3ff 100%);
+            border: 2px solid var(--main-purple);
+        }
+        .stat-hero-label {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 2px;
+        }
+        .stat-hero-value {
+            font-size: 40px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+        .stat-hero-value.positive { color: var(--add-green); }
+        .stat-hero-value.negative { color: #FF4500; }
+        .stat-hero-value.zero { color: #999; }
+        .stat-hero-unit {
+            font-size: 14px;
+            font-weight: 400;
+            color: #888;
+        }
+        .stat-hero-sub {
             font-size: 13px;
             color: #999;
-            flex: 1;
+            margin-bottom: 16px;
         }
-        .bottom-sheet-btns {
+        .stat-bars {
+            text-align: left;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0,0,0,0.06);
+        }
+        .stat-bar-row {
             display: flex;
-            gap: 12px;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
         }
-        .sheet-btn {
+        .stat-bar-row:last-child {
+            margin-bottom: 0;
+        }
+        .stat-bar-label {
+            font-size: 13px;
+            color: #666;
+            min-width: 28px;
+            font-weight: 500;
+        }
+        .stat-bar-track {
             flex: 1;
-            height: 48px;
+            height: 10px;
+            background: #e8e6f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.8s ease;
+            min-width: 0;
+        }
+        .bar-add { background: linear-gradient(90deg, #3CB371, #66CDAA); }
+        .bar-minus { background: linear-gradient(90deg, #FF6B6B, #FFA07A); }
+        .stat-bar-value {
+            font-size: 14px;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: right;
+            color: var(--text-dark);
+        }
+
+        /* 排行榜样式 */
+        .leaderboard-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.6);
+        }
+        .leaderboard-row:last-child {
+            margin-bottom: 0;
+        }
+        .leaderboard-rank {
+            width: 24px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #888;
+            flex-shrink: 0;
+        }
+        .leaderboard-name {
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 50px;
+            color: var(--text-dark);
+            flex-shrink: 0;
+        }
+        .leaderboard-bar-track {
+            flex: 1;
+            height: 8px;
+            background: #e8e6f0;
+            border-radius: 4px;
+            overflow: hidden;
+            min-width: 30px;
+        }
+        .leaderboard-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+        .leaderboard-bar-fill.lb-add {
+            background: linear-gradient(90deg, #3CB371, #66CDAA);
+        }
+        .leaderboard-bar-fill.lb-minus {
+            background: linear-gradient(90deg, #FF6B6B, #FFA07A);
+        }
+        .leaderboard-count {
+            font-size: 13px;
+            font-weight: 700;
+            min-width: 32px;
+            text-align: right;
+            color: #666;
+            flex-shrink: 0;
+        }
+
+        /* 评分弹窗网格 */
+        .item-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px 0;
+        }
+        .item-grid .grid-item {
+            flex: 1 1 calc(50% - 4px);
+            min-width: 0;
+            padding: 10px 6px;
             border-radius: 12px;
-            border: none;
-            font-size: 16px;
+            border: 2px solid var(--light-purple);
+            background: white;
+            text-align: center;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
+            color: var(--text-dark);
         }
-        .sheet-btn:active {
-            transform: scale(0.97);
+        .item-grid .grid-item:active {
+            transform: scale(0.96);
+            background: var(--light-purple);
         }
-        .sheet-btn-cancel {
-            background: #f0f0f0;
+        .item-grid .grid-item.selected {
+            border-color: var(--main-purple);
+            background: var(--light-purple);
+        }
+
+        /* 模态框按钮 */
+        .modal-btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .modal-btn {
+            flex: 1;
+            height: 50px;
+            border-radius: 16px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .modal-btn:active {
+            transform: scale(0.96);
+        }
+        .cancel-btn {
+            background: #F5F5F5;
             color: #666;
         }
-        .sheet-btn-save {
-            background: var(--main-purple);
+        .confirm-add-btn {
+            background: linear-gradient(135deg, #3CB371 0%, #66CDAA 100%);
             color: white;
         }
-        @media (max-width: 420px) {
-            .rule-item-with-edit {
-                padding: 12px;
-            }
-            .rule-item-display .rule-name-text {
-                font-size: 14px;
-            }
-            .rule-item-edit > div[style*="flex"] {
-                flex-direction: column;
-                gap: 6px;
-            }
-            .rule-item-edit input {
-                width: 100%;
-                max-width: none;
-                box-sizing: border-box;
-            }
-            .rule-edit-score {
-                width: 100%;
-            }
-            .rule-edit-btns {
-                justify-content: stretch;
-            }
-            .rule-edit-btns button {
-                flex: 1;
-                text-align: center;
-            }
+        .confirm-minus-btn {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FFA07A 100%);
+            color: white;
+        }
+
+        /* 备注输入框 */
+        .remark-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 2px solid var(--light-purple);
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+            margin-top: 8px;
+        }
+        .remark-input:focus {
+            border-color: var(--main-purple);
         }
 
         /* 自定义统一提示弹窗 */
@@ -1196,7 +1230,7 @@
         <button class="bottom-btn" id="todaySettle">今日结算</button>
         <button class="bottom-btn danger-btn" id="resetBtn">重置</button>
         <button class="bottom-btn" id="openWeekStat">周统计</button>
-        <button class="bottom-btn" id="openWeekAnalyze">每周分析</button>
+        <!-- 每周分析已合并入周统计 -->
         <button class="bottom-btn" id="ruleSettings">规则设置</button>
         <button class="bottom-btn" id="exportDataBtn" style="border-color:#3B82F6;color:#3B82F6;">📤 导出</button>
         <button class="bottom-btn" id="syncDataBtn" style="border-color:#8B5CF6;color:#8B5CF6;">☁️ 同步</button>
@@ -1247,16 +1281,7 @@
         </div>
     </div>
 
-    <!-- 每周分析页面 -->
-    <div class="page-view" id="weekAnalyzePage">
-        <div class="page-header">
-            <button class="page-back-btn" id="closeWeekAnalyze">←</button>
-            <span class="page-title">📈 每周进步分析</span>
-        </div>
-        <div class="page-content">
-            <div id="weekAnalyzeContent"></div>
-        </div>
-    </div>
+    <!-- 每周分析已合并入周统计页面 -->
 
     <!-- 重置选择弹窗 -->
     <div class="modal-mask" id="resetChoiceModal">
@@ -1600,26 +1625,23 @@
                 `;
             } else {
                 addRuleList.innerHTML = addRules.map((rule, index) => `
-                    <div class="swipe-wrap">
-                        <div class="swipe-reveal">删除</div>
-                        <div class="rule-item-with-edit" data-type="add" data-index="${index}" data-id="${rule.id}">
-                            <div class="rule-item-display">
-                                <span class="drag-handle">⋮⋮</span>
-                                <span class="rule-name-text">${rule.name} <span class="rule-score rule-score-add">+${rule.score}</span></span>
-                                <div class="rule-action-btns">
-                                    <button class="rule-edit-btn" data-type="add" data-index="${index}">✎</button>
-                                    <button class="rule-delete-btn" data-type="add" data-index="${index}">×</button>
-                                </div>
+                    <div class="rule-item-with-edit" data-type="add" data-index="${index}" data-id="${rule.id}">
+                        <div class="rule-item-display">
+                            <span class="drag-handle">⋮⋮</span>
+                            <span class="rule-name-text">${rule.name} <span class="rule-score rule-score-add">+${rule.score}</span></span>
+                            <div class="rule-action-btns">
+                                <button class="rule-edit-btn" data-type="add" data-index="${index}">✎</button>
+                                <button class="rule-delete-btn" data-type="add" data-index="${index}">×</button>
                             </div>
-                            <div class="rule-item-edit">
-                                <div style="display:flex;gap:8px;align-items:center;">
-                                    <input type="text" class="rule-edit-input" value="${rule.name}" placeholder="规则名称">
-                                    <input type="number" class="rule-edit-score" value="${rule.score}" placeholder="分值">
-                                </div>
-                                <div class="rule-edit-btns">
-                                    <button class="rule-edit-cancel" data-type="add" data-index="${index}">取消</button>
-                                    <button class="rule-edit-save" data-type="add" data-index="${index}">保存</button>
-                                </div>
+                        </div>
+                        <div class="rule-item-edit">
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <input type="text" class="rule-edit-input" value="${rule.name}" placeholder="规则名称">
+                                <input type="number" class="rule-edit-score" value="${rule.score}" placeholder="分值">
+                            </div>
+                            <div class="rule-edit-btns">
+                                <button class="rule-edit-cancel" data-type="add" data-index="${index}">取消</button>
+                                <button class="rule-edit-save" data-type="add" data-index="${index}">保存</button>
                             </div>
                         </div>
                     </div>
@@ -1637,26 +1659,23 @@
                 `;
             } else {
                 minusRuleList.innerHTML = minusRules.map((rule, index) => `
-                    <div class="swipe-wrap">
-                        <div class="swipe-reveal">删除</div>
-                        <div class="rule-item-with-edit" data-type="minus" data-index="${index}" data-id="${rule.id}">
-                            <div class="rule-item-display">
-                                <span class="drag-handle">⋮⋮</span>
-                                <span class="rule-name-text">${rule.name} <span class="rule-score rule-score-minus">${rule.score}</span></span>
-                                <div class="rule-action-btns">
-                                    <button class="rule-edit-btn" data-type="minus" data-index="${index}">✎</button>
-                                    <button class="rule-delete-btn" data-type="minus" data-index="${index}">×</button>
-                                </div>
+                    <div class="rule-item-with-edit" data-type="minus" data-index="${index}" data-id="${rule.id}">
+                        <div class="rule-item-display">
+                            <span class="drag-handle">⋮⋮</span>
+                            <span class="rule-name-text">${rule.name} <span class="rule-score rule-score-minus">${rule.score}</span></span>
+                            <div class="rule-action-btns">
+                                <button class="rule-edit-btn" data-type="minus" data-index="${index}">✎</button>
+                                <button class="rule-delete-btn" data-type="minus" data-index="${index}">×</button>
                             </div>
-                            <div class="rule-item-edit">
-                                <div style="display:flex;gap:8px;align-items:center;">
-                                    <input type="text" class="rule-edit-input" value="${rule.name}" placeholder="规则名称">
-                                    <input type="number" class="rule-edit-score" value="${rule.score}" placeholder="分值">
-                                </div>
-                                <div class="rule-edit-btns">
-                                    <button class="rule-edit-cancel" data-type="minus" data-index="${index}">取消</button>
-                                    <button class="rule-edit-save" data-type="minus" data-index="${index}">保存</button>
-                                </div>
+                        </div>
+                        <div class="rule-item-edit">
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <input type="text" class="rule-edit-input" value="${rule.name}" placeholder="规则名称">
+                                <input type="number" class="rule-edit-score" value="${rule.score}" placeholder="分值">
+                            </div>
+                            <div class="rule-edit-btns">
+                                <button class="rule-edit-cancel" data-type="minus" data-index="${index}">取消</button>
+                                <button class="rule-edit-save" data-type="minus" data-index="${index}">保存</button>
                             </div>
                         </div>
                     </div>
@@ -1721,8 +1740,11 @@
             const statContent = document.getElementById('weekStatContent');
             
             let allWeekData = [...weekData];
-            // 只显示当前周的数据（周一 ~ 周日）
+            // 根据偏移量计算周范围
             const mon = getMondayOfWeek();
+            if (window.weekStatOffset) {
+                mon.setDate(mon.getDate() + window.weekStatOffset * 7);
+            }
             const sun = new Date(mon);
             sun.setDate(mon.getDate() + 6);
             allWeekData = allWeekData.filter(item => {
@@ -1731,15 +1753,17 @@
                 return d >= mon && d <= sun;
             });
 
-            // 始终包含今日数据（无论是否结算），确保周统计立即可见
-            const todayExist = allWeekData.some(item => item.date === todayData.date);
-            if(!todayExist && todayData.records.length > 0){
-                allWeekData.push({
-                    date: todayData.date,
-                    weekDay: getWeekDay(),
-                    finalCoin: todayData.coin,
-                    records: todayData.records
-                });
+            // 当前周才包含今日未结算数据
+            if (!window.weekStatOffset) {
+                const todayExist = allWeekData.some(item => item.date === todayData.date);
+                if(!todayExist && todayData.records.length > 0){
+                    allWeekData.push({
+                        date: todayData.date,
+                        weekDay: getWeekDay(),
+                        finalCoin: todayData.coin,
+                        records: todayData.records
+                    });
+                }
             }
 
             const weekTotal = allWeekData.reduce((sum, item) => sum + item.finalCoin, 0);
@@ -1770,32 +1794,49 @@
             const weekMap = {1:'周一',2:'周二',3:'周三',4:'周四',5:'周五',6:'周六',0:'周日'};
             const weekOrder = [1,2,3,4,5,6,0];
 
+            const maxVal = Math.max(totalAdd, Math.abs(totalMinus), 1);
+            const addPercent = Math.min((totalAdd / maxVal) * 100, 100);
+            const minusPercent = Math.min((Math.abs(totalMinus) / maxVal) * 100, 100);
+            const totalClass = weekTotal > 0 ? 'positive' : (weekTotal < 0 ? 'negative' : 'zero');
+            const offset = window.weekStatOffset || 0;
+            const weekLabel = `${mon.getMonth()+1}月${mon.getDate()}日 ~ ${sun.getMonth()+1}月${sun.getDate()}日`;
+            const isCurrentWeek = !offset;
+
             let html = `
-                <div class="stat-item">
-                    <div class="stat-item-title">本周核心数据</div>
-                    <div class="stat-detail"><span>本周累计总金币</span><span>${weekTotal}</span></div>
-                    <div class="stat-detail"><span>本周总加分</span><span>+${totalAdd}</span></div>
-                    <div class="stat-detail"><span>本周总扣分</span><span>${totalMinus}</span></div>
+                <div class="week-nav">
+                    <button class="week-nav-btn" id="prevWeek">‹</button>
+                    <span class="week-nav-label">${isCurrentWeek ? '本周' : weekLabel}</span>
+                    <button class="week-nav-btn" id="nextWeek" ${isCurrentWeek ? 'disabled' : ''}>›</button>
+                </div>
+                <div class="stat-item stat-hero">
+                    <div class="stat-hero-label">${isCurrentWeek ? '本周累计' : weekLabel + ' 累计'}</div>
+                    <div class="stat-hero-value ${totalClass}">${weekTotal >= 0 ? '+' : ''}${weekTotal} <span class="stat-hero-unit">金币</span></div>
+                    <div class="stat-hero-sub">加分 ${totalAdd > 0 ? '+' : ''}${totalAdd}　扣分 ${totalMinus}</div>
+                    <div class="stat-bars">
+                        <div class="stat-bar-row">
+                            <span class="stat-bar-label">加分</span>
+                            <div class="stat-bar-track">
+                                <div class="stat-bar-fill bar-add" style="width:${addPercent}%"></div>
+                            </div>
+                            <span class="stat-bar-value">+${totalAdd}</span>
+                        </div>
+                        <div class="stat-bar-row">
+                            <span class="stat-bar-label">扣分</span>
+                            <div class="stat-bar-track">
+                                <div class="stat-bar-fill bar-minus" style="width:${minusPercent}%"></div>
+                            </div>
+                            <span class="stat-bar-value">${totalMinus}</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="stat-item">
-                    <div class="stat-item-title">每日明细（周一至周日）</div>
+                    <div class="stat-item-title">每日金币走势</div>
+                    <canvas id="weekDailyChart" style="width:100%;height:160px;"></canvas>
+                </div>
             `;
 
-            weekOrder.forEach(day => {
-                const dayData = allWeekData.find(item => item.weekDay === day);
-                const coin = dayData ? dayData.finalCoin : 0;
-                html += `
-                    <div class="stat-detail">
-                        <span>${weekMap[day]}</span>
-                        <span>${coin > 0 ? '+' : ''}${coin} 金币</span>
-                    </div>
-                `;
-            });
-
             html += `
-                </div>
-
                 <div class="stat-item">
                     <div class="stat-item-title">加分项使用次数统计</div>
             `;
@@ -1808,26 +1849,240 @@
                 }
             }
 
+            // 排行榜：加分项
+            const addEntries = Object.entries(addCount).sort((a, b) => b[1] - a[1]);
+            const maxAdd = addEntries.length > 0 ? addEntries[0][1] : 1;
             html += `
-                </div>
-
                 <div class="stat-item">
-                    <div class="stat-item-title">扣分项使用次数统计</div>
+                    <div class="stat-item-title">🏆 加分项排行榜</div>
             `;
-
-            if(Object.keys(minusCount).length === 0){
-                html += '<div class="stat-detail">暂无扣分记录</div>';
+            if (addEntries.length === 0) {
+                html += '<div class="stat-detail" style="text-align:center;justify-content:center;">暂无加分记录</div>';
             } else {
-                for(let [name, count] of Object.entries(minusCount)){
-                    html += `<div class="stat-detail"><span>${name}</span><span>${count} 次</span></div>`;
-                }
+                addEntries.forEach(([name, count], idx) => {
+                    const pct = (count / maxAdd) * 100;
+                    const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : ''));
+                    html += `
+                        <div class="leaderboard-row">
+                            <span class="leaderboard-rank">${medal || (idx + 1)}</span>
+                            <span class="leaderboard-name">${name}</span>
+                            <div class="leaderboard-bar-track">
+                                <div class="leaderboard-bar-fill lb-add" style="width:${pct}%"></div>
+                            </div>
+                            <span class="leaderboard-count">${count}次</span>
+                        </div>
+                    `;
+                });
             }
+            html += '</div>';
 
+            // 排行榜：扣分项
+            const minusEntries = Object.entries(minusCount).sort((a, b) => b[1] - a[1]);
+            const maxMinus = minusEntries.length > 0 ? minusEntries[0][1] : 1;
+            html += `
+                <div class="stat-item">
+                    <div class="stat-item-title">🏆 扣分项排行榜</div>
+            `;
+            if (minusEntries.length === 0) {
+                html += '<div class="stat-detail" style="text-align:center;justify-content:center;">暂无扣分记录</div>';
+            } else {
+                minusEntries.forEach(([name, count], idx) => {
+                    const pct = (count / maxMinus) * 100;
+                    const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : ''));
+                    html += `
+                        <div class="leaderboard-row">
+                            <span class="leaderboard-rank">${medal || (idx + 1)}</span>
+                            <span class="leaderboard-name">${name}</span>
+                            <div class="leaderboard-bar-track">
+                                <div class="leaderboard-bar-fill lb-minus" style="width:${pct}%"></div>
+                            </div>
+                            <span class="leaderboard-count">${count}次</span>
+                        </div>
+                    `;
+                });
+            }
             html += '</div>';
             statContent.innerHTML = html;
+
+            // 周导航按钮事件
+            const prevBtn = document.getElementById('prevWeek');
+            const nextBtn = document.getElementById('nextWeek');
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    window.weekStatOffset = (window.weekStatOffset || 0) - 1;
+                    renderWeekStat();
+                });
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    window.weekStatOffset = (window.weekStatOffset || 0) + 1;
+                    if (window.weekStatOffset >= 0) {
+                        window.weekStatOffset = 0;
+                    }
+                    renderWeekStat();
+                });
+            }
+
+            // 绘制每日走势图
+            if (window.weekDailyChartInstance) {
+                try { window.weekDailyChartInstance.destroy(); } catch(e) {}
+            }
+            const dailyCanvas = document.getElementById('weekDailyChart');
+            if (dailyCanvas) {
+                const dailyLabels = weekOrder.map(d => weekMap[d]);
+                const dailyData = weekOrder.map(day => {
+                    const dayData = allWeekData.find(item => item.weekDay === day);
+                    return dayData ? dayData.finalCoin : 0;
+                });
+                window.weekDailyChartInstance = new Chart(dailyCanvas.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: dailyLabels,
+                        datasets: [{
+                            label: '金币',
+                            data: dailyData,
+                            borderColor: '#7B68EE',
+                            backgroundColor: 'rgba(123, 104, 238, 0.1)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.35,
+                            pointBackgroundColor: '#7B68EE',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `${ctx.parsed.y >= 0 ? '+' : ''}${ctx.parsed.y} 金币`
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0, font: { size: 11 } },
+                                grid: { color: 'rgba(0,0,0,0.05)' }
+                            },
+                            x: {
+                                ticks: { font: { size: 11 } },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ===== 多周趋势与对比分析 =====
+            const allData = [...weekData];
+            if (!window.weekStatOffset && todayData.records.length > 0) {
+                const todayInAll = allData.some(item => item.date === todayData.date);
+                if (!todayInAll) {
+                    allData.push({
+                        date: todayData.date,
+                        weekDay: getWeekDay(),
+                        finalCoin: todayData.coin,
+                        records: todayData.records
+                    });
+                }
+            }
+            const weekGroups = buildWeekGroups(allData);
+            if (weekGroups.length >= 2) {
+                // 多周趋势折线图
+                const trendLabels = weekGroups.map(wg => formatDate(wg.start));
+                const trendData = weekGroups.map(wg =>
+                    wg.entries.reduce((s, e) => s + (e.finalCoin || 0), 0)
+                );
+
+                html = `
+                    <div class="stat-item">
+                        <div class="stat-item-title">📈 每周金币趋势</div>
+                        <canvas id="weekTrendChart" style="width:100%;height:160px;"></canvas>
+                    </div>
+                `;
+                statContent.innerHTML += html;
+
+                if (window.weekTrendChartInstance) {
+                    try { window.weekTrendChartInstance.destroy(); } catch(e) {}
+                }
+                const trendCanvas = document.getElementById('weekTrendChart');
+                if (trendCanvas) {
+                    window.weekTrendChartInstance = new Chart(trendCanvas.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: trendLabels,
+                            datasets: [{
+                                label: '总金币',
+                                data: trendData,
+                                backgroundColor: trendData.map(v => v >= 0 ? 'rgba(60, 179, 113, 0.7)' : 'rgba(255, 107, 107, 0.7)'),
+                                borderColor: trendData.map(v => v >= 0 ? '#3CB371' : '#FF6B6B'),
+                                borderWidth: 1.5,
+                                borderRadius: 4,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: ctx => `${ctx.parsed.y >= 0 ? '+' : ''}${ctx.parsed.y} 金币`
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } } },
+                                x: { ticks: { font: { size: 10, maxRotation: 20 } } }
+                            }
+                        }
+                    });
+                }
+
+                // 本周 vs 上周文字对比
+                const currWeek = weekGroups[weekGroups.length - 1];
+                const lastWeek = weekGroups[weekGroups.length - 2];
+                const currCounts = countItems(currWeek.entries);
+                const lastCounts = countItems(lastWeek.entries);
+
+                let good = [], bad = [];
+                for (let name in currCounts.add) {
+                    const c = currCounts.add[name];
+                    const l = lastCounts.add[name] || 0;
+                    if (c > l) good.push('✅ ' + name + ' 加分次数变多啦！');
+                    if (c < l) bad.push('❌ ' + name + ' 加分次数减少了');
+                }
+                for (let name in lastCounts.add) {
+                    if (!currCounts.add[name]) bad.push('❌ ' + name + ' 最近没有加分了');
+                }
+                for (let name in currCounts.minus) {
+                    const c = currCounts.minus[name];
+                    const l = lastCounts.minus[name] || 0;
+                    if (c < l) good.push('✅ ' + name + ' 扣分变少，进步很大！');
+                    if (c > l) bad.push('❌ ' + name + ' 扣分变多了，要注意哦');
+                }
+                for (let name in lastCounts.minus) {
+                    if (!currCounts.minus[name]) good.push('✅ ' + name + ' 最近没有扣分，太棒了！');
+                }
+
+                if (good.length === 0) good.push('本周暂时没有明显进步项，继续加油！');
+                if (bad.length === 0) bad.push('本周没有退步项，表现非常优秀！');
+
+                let analysisHtml = `<div class="analysis-box good"><div class="analysis-title">🎉 进步的地方</div>` + good.join('<br>') + `</div>`;
+                analysisHtml += `<div class="analysis-box bad"><div class="analysis-title">⚠️ 需要改进</div>` + bad.join('<br>') + `</div>`;
+                statContent.innerHTML += analysisHtml;
+            } else if (weekGroups.length === 1) {
+                statContent.innerHTML += '<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>';
+            }
         }
 
-        // ===== 每周分析（含 Chart.js 图表） =====
+        // ===== 工具函数 =====
         let weekChartType = 'pie';
         let weekChartInstances = [];
 
@@ -2444,13 +2699,7 @@
             document.getElementById('closeWeekStat').addEventListener('click', () => {
                 document.getElementById('weekStatPage').classList.remove('show');
             });
-            document.getElementById('openWeekAnalyze').addEventListener('click', () => {
-                renderWeekAnalyze();
-                document.getElementById('weekAnalyzePage').classList.add('show');
-            });
-            document.getElementById('closeWeekAnalyze').addEventListener('click', () => {
-                document.getElementById('weekAnalyzePage').classList.remove('show');
-            });
+            // 每周分析已合并入周统计，不再单独打开
 
             // 原有弹窗点击空白关闭
             document.querySelectorAll('.modal-mask').forEach(mask => {
@@ -2473,48 +2722,6 @@
             document.getElementById('minusRuleList').addEventListener('click', (e) => handleRuleAction(e, 'minus'));
 
             // 左滑删除 - 触摸事件委托
-            let swipeData = {};
-            function resetSwipe(item) {
-                if (!item) return;
-                item.style.transition = 'transform 0.25s ease';
-                item.style.transform = '';
-                setTimeout(() => { item.style.transition = ''; }, 250);
-            }
-            document.querySelectorAll('#addRuleList, #minusRuleList').forEach(list => {
-                list.addEventListener('touchstart', (e) => {
-                    const item = e.target.closest('.rule-item-with-edit');
-                    if (!item || item.closest('.editing') || item.closest('.rule-removing')) {
-                        swipeData = {};
-                        return;
-                    }
-                    swipeData = { item, startX: e.touches[0].clientX, currentX: e.touches[0].clientX, swiping: false };
-                }, { passive: true });
-
-                list.addEventListener('touchmove', (e) => {
-                    if (!swipeData.item) return;
-                    const dx = e.touches[0].clientX - swipeData.startX;
-                    if (Math.abs(dx) > 10) swipeData.swiping = true;
-                    swipeData.currentX = e.touches[0].clientX;
-                    const clamped = Math.min(Math.max(dx, -80), 0);
-                    swipeData.item.style.transition = '';
-                    swipeData.item.style.transform = `translateX(${clamped}px)`;
-                }, { passive: true });
-
-                list.addEventListener('touchend', () => {
-                    if (!swipeData.item) return;
-                    const dx = swipeData.currentX - swipeData.startX;
-                    const item = swipeData.item;
-                    const wasSwiping = swipeData.swiping;
-                    swipeData = {};
-                    if (dx < -50 && wasSwiping) {
-                        const delBtn = item.querySelector('.rule-delete-btn');
-                        if (delBtn) delBtn.click();
-                        resetSwipe(item);
-                    } else {
-                        resetSwipe(item);
-                    }
-                }, { passive: true });
-            });
 
             // 拖拽排序
             document.querySelectorAll('#addRuleList, #minusRuleList').forEach(list => {
