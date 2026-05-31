@@ -1004,10 +1004,7 @@
             <p style="font-size:12px;color:#94a3b8;margin-bottom:14px;line-height:1.4;">需要 <strong>repo</strong> 权限。可在 <a href="https://github.com/settings/tokens" target="_blank" style="color:#3B82F6;text-decoration:none;">GitHub Token设置</a> 生成。</p>
             <div id="syncStatus" style="font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;">就绪</div>
             <div style="display:flex;flex-direction:column;gap:10px;">
-                <div style="display:flex;gap:10px;">
-                    <button class="bottom-btn" id="doSyncUpload" style="border-color:var(--main-purple);color:var(--main-purple);flex:1;">⬆️ 上传</button>
-                    <button class="bottom-btn" id="doSyncDownload" style="border-color:#8B5CF6;color:#8B5CF6;flex:1;">⬇️ 下载</button>
-                </div>
+                <button class="bottom-btn" id="doSyncToGithub" style="border-color:var(--main-purple);color:var(--main-purple);">☁️ 同步到 GitHub</button>
                 <button class="bottom-btn danger-btn" onclick="closeModal('syncModal')">关闭</button>
             </div>
         </div>
@@ -1055,6 +1052,9 @@
         let selectedAddItem = null;
         let selectedMinusItem = null;
         let confirmCallback = null;
+        // GitHub 仓库配置
+        const GOLD_GITHUB_REPO = 'wangwx2019/jinbitongji';
+        const GOLD_GITHUB_PATH = 'data/jinbitongji-data.json';
         // 长按计时器
         let longPressTimer = null;
         let isLongPress = false;
@@ -1094,9 +1094,37 @@
             confirmCallback = null;
         }
 
+        // ===== 启动时从 GitHub Raw 自动拉取数据 =====
+        async function loadFromGithub() {
+            const token = localStorage.getItem('github_token_gold');
+            if (!token) return;
+            try {
+                const url = `https://api.github.com/repos/${GOLD_GITHUB_REPO}/contents/${GOLD_GITHUB_PATH}`;
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (!res.ok) return;
+                const d = await res.json();
+                const imported = JSON.parse(decodeURIComponent(escape(atob(d.content))));
+                if (!imported.todayData) return;
+                todayData = imported.todayData;
+                weekData = imported.weekData || [];
+                if (imported.addRules) { addRules = imported.addRules; saveRules(); }
+                if (imported.minusRules) { minusRules = imported.minusRules; saveRules(); }
+                saveData();
+                renderCoin();
+                renderRecordList();
+                renderItemGrid();
+                console.log('✅ 已从 GitHub 自动加载最新数据');
+            } catch(e) {
+                console.log('📁 从 GitHub 加载失败，使用本地数据');
+            }
+        }
+
         function init() {
             loadRules();
             loadData();
+            loadFromGithub();
             checkDateReset();
             scheduleAutoSettle();
             renderItemGrid();
@@ -1939,8 +1967,11 @@
                 document.getElementById('syncStatus').style.cssText = 'font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;';
                 document.getElementById('syncModal').classList.add('show');
             });
-            document.getElementById('doSyncUpload').addEventListener('click', syncGoldToGithub);
-            document.getElementById('doSyncDownload').addEventListener('click', syncGoldFromGithub);
+            // 同步按钮：直接执行同步
+            document.getElementById('doSyncToGithub').addEventListener('click', () => {
+                closeModal('syncModal');
+                syncGoldToGithub();
+            });
         }
 
         // ===== 导出/导入功能 =====
@@ -1992,65 +2023,25 @@
         }
 
         // ===== GitHub同步功能 =====
-        const GOLD_GITHUB_REPO = 'wangwx2019/jinbitongji';
-        const GOLD_GITHUB_PATH = 'data/jinbitongji-data.json';
-
-        function setSyncStatus(msg, type) {
-            const el = document.getElementById('syncStatus');
-            el.textContent = msg;
-            let bg = '#f8fafc', color = '#475569';
-            if (type === 'success') { bg = '#f0fdf4'; color = '#15803d'; }
-            else if (type === 'error') { bg = '#fef2f2'; color = '#dc2626'; }
-            else if (type === 'loading') { bg = '#dbeafe'; color = '#1e40af'; }
-            el.style.cssText = `font-size:13px;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;margin-bottom:10px;background:${bg};color:${color};`;
-        }
-        function getGoldToken() {
-            const token = document.getElementById('syncTokenInput').value.trim();
-            if (!token) { setSyncStatus('❌ 请输入 GitHub Token', 'error'); return null; }
-            localStorage.setItem('github_token_gold', token);
-            return token;
-        }
         async function syncGoldToGithub() {
-            const token = getGoldToken();
-            if (!token) return;
+            const token = localStorage.getItem('github_token_gold');
+            if (!token) { showTip('❌ 请先配置 GitHub Token'); return; }
             const data = { todayData, weekData, addRules, minusRules, exportTime: new Date().toISOString() };
-            setSyncStatus('⏳ 上传中...', 'loading');
+            showTip('⏳ 正在同步到 GitHub...');
             try {
                 const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
                 const url = `https://api.github.com/repos/${GOLD_GITHUB_REPO}/contents/${GOLD_GITHUB_PATH}`;
                 let sha = null;
                 const check = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' } });
                 if (check.ok) { sha = (await check.json()).sha; }
-                else if (check.status !== 404) { const e = await check.json(); setSyncStatus(`❌ ${e.message}`, 'error'); return; }
+                else if (check.status !== 404) { const e = await check.json(); showTip(`❌ ${e.message}`); return; }
                 const body = { message: `金币数据同步 ${new Date().toLocaleString('zh-CN')}`, content };
                 if (sha) body.sha = sha;
                 const res = await fetch(url, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' }, body: JSON.stringify(body) });
-                if (res.ok) setSyncStatus('✅ 上传成功！', 'success');
-                else { const e = await res.json(); setSyncStatus(`❌ ${e.message}`, 'error'); }
-            } catch(e) { setSyncStatus(`❌ ${e.message}`, 'error'); }
-        }
-        async function syncGoldFromGithub() {
-            const token = getGoldToken();
-            if (!token) return;
-            setSyncStatus('⏳ 下载中...', 'loading');
-            try {
-                const url = `https://api.github.com/repos/${GOLD_GITHUB_REPO}/contents/${GOLD_GITHUB_PATH}`;
-                const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' } });
-                if (!res.ok) { setSyncStatus('❌ 云端暂无数据', 'error'); return; }
-                const d = await res.json();
-                const imported = JSON.parse(decodeURIComponent(escape(atob(d.content))));
-                if (!imported.todayData) { setSyncStatus('❌ 数据格式错误', 'error'); return; }
-                todayData = imported.todayData;
-                weekData = imported.weekData || [];
-                if (imported.addRules) { addRules = imported.addRules; saveRules(); }
-                if (imported.minusRules) { minusRules = imported.minusRules; saveRules(); }
-                saveData();
-                renderCoin();
-                renderRecordList();
-                renderItemGrid();
-                document.getElementById('syncModal').classList.remove('show');
-                showTip('✅ 下载成功！已从 GitHub 恢复最新数据。');
-            } catch(e) { setSyncStatus(`❌ ${e.message}`, 'error'); }
+                if (res.ok) {
+                    showTip('✅ 同步到 GitHub 成功！');
+                } else { const e = await res.json(); showTip(`❌ ${e.message}`); }
+            } catch(e) { showTip(`❌ ${e.message}`); }
         }
 
         // 原有规则操作函数
