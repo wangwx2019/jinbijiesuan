@@ -941,34 +941,52 @@
             flex-shrink: 0;
         }
 
-        /* 评分弹窗网格 */
+        /* 项目网格 */
         .item-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 8px 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        .item-grid .grid-item {
-            flex: 1 1 calc(50% - 4px);
-            min-width: 0;
-            padding: 10px 6px;
+
+        .item-btn {
+            padding: 12px 8px;
             border-radius: 12px;
             border: 2px solid var(--light-purple);
-            background: white;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s ease;
+            background: var(--light-purple);
             color: var(--text-dark);
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s ease;
+            word-break: break-all;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
-        .item-grid .grid-item:active {
-            transform: scale(0.96);
-            background: var(--light-purple);
+
+        .item-btn:active {
+            transform: scale(0.95);
+            background: var(--main-purple);
+            color: white;
         }
-        .item-grid .grid-item.selected {
-            border-color: var(--main-purple);
-            background: var(--light-purple);
+
+        .add-item-btn {
+            border-color: var(--add-green);
+            background: #F0FFF0;
+        }
+
+        .add-item-btn:active {
+            background: var(--deep-green);
+        }
+
+        .minus-item-btn {
+            border-color: var(--minus-orange);
+            background: #FFF0F5;
+        }
+
+        .minus-item-btn:active {
+            background: var(--deep-orange);
         }
 
         /* 模态框按钮 */
@@ -995,24 +1013,23 @@
             color: #666;
         }
         .confirm-add-btn {
-            background: linear-gradient(135deg, #3CB371 0%, #66CDAA 100%);
+            background: linear-gradient(135deg, var(--add-green) 0%, var(--deep-green) 100%);
             color: white;
         }
         .confirm-minus-btn {
-            background: linear-gradient(135deg, #FF6B6B 0%, #FFA07A 100%);
+            background: linear-gradient(135deg, var(--minus-orange) 0%, var(--deep-orange) 100%);
             color: white;
         }
 
         /* 备注输入框 */
         .remark-input {
             width: 100%;
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 12px;
             border: 2px solid var(--light-purple);
-            font-size: 14px;
+            font-size: 15px;
             outline: none;
             box-sizing: border-box;
-            margin-top: 8px;
         }
         .remark-input:focus {
             border-color: var(--main-purple);
