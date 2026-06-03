@@ -989,6 +989,50 @@
             background: var(--deep-orange);
         }
 
+        /* 加分/扣分弹窗内的删除和新增按钮 */
+        .item-btn-wrap {
+            position: relative;
+        }
+        .item-del-btn {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: #ff4757;
+            color: white;
+            font-size: 14px;
+            line-height: 22px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(255,71,87,0.4);
+            z-index: 2;
+            padding: 0;
+            transition: all 0.15s ease;
+        }
+        .item-del-btn:active {
+            transform: scale(0.85);
+        }
+        .item-add-btn {
+            grid-column: 1 / -1;
+            padding: 14px;
+            border-radius: 14px;
+            border: 2px dashed #ccc;
+            background: transparent;
+            color: #999;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .item-add-btn:active {
+            background: #f5f5f5;
+            border-color: var(--main-purple);
+            color: var(--main-purple);
+        }
+
         /* 模态框按钮 */
         .modal-btn-group {
             display: flex;
@@ -1622,13 +1666,19 @@
         function renderItemGrid() {
             const addGrid = document.getElementById('addItemGrid');
             addGrid.innerHTML = addRules.map(item => `
-                <button class="item-btn add-item-btn" data-id="${item.id}" data-type="add">${item.name} +${item.score}</button>
-            `).join('');
+                <div class="item-btn-wrap">
+                    <button class="item-btn add-item-btn" data-id="${item.id}" data-type="add">${item.name} +${item.score}</button>
+                    <button class="item-del-btn" data-id="${item.id}" data-type="add" aria-label="删除">×</button>
+                </div>
+            `).join('') + '<button class="item-add-btn" data-type="add">+ 添加加分规则</button>';
 
             const minusGrid = document.getElementById('minusItemGrid');
             minusGrid.innerHTML = minusRules.map(item => `
-                <button class="item-btn minus-item-btn" data-id="${item.id}" data-type="minus">${item.name} ${item.score}</button>
-            `).join('');
+                <div class="item-btn-wrap">
+                    <button class="item-btn minus-item-btn" data-id="${item.id}" data-type="minus">${item.name} ${item.score}</button>
+                    <button class="item-del-btn" data-id="${item.id}" data-type="minus" aria-label="删除">×</button>
+                </div>
+            `).join('') + '<button class="item-add-btn" data-type="minus">+ 添加扣分规则</button>';
         }
 
         function renderRuleLists() {
@@ -2601,6 +2651,68 @@
                 renderCoin();
                 renderRecordList();
                 document.getElementById('minusModal').classList.remove('show');
+            });
+
+            // 加分/扣分弹窗内：删除规则
+            document.getElementById('addItemGrid').addEventListener('click', (e) => {
+                const delBtn = e.target.closest('.item-del-btn');
+                if (!delBtn) return;
+                const type = delBtn.dataset.type;
+                const rules = type === 'add' ? addRules : minusRules;
+                const ruleId = delBtn.dataset.id;
+                const rule = rules.find(r => r.id === ruleId);
+                if (!rule) return;
+                showConfirm(`确认删除${type === 'add' ? '加分' : '扣分'}规则「${rule.name}」？`, () => {
+                    const idx = rules.findIndex(r => r.id === ruleId);
+                    if (idx !== -1) {
+                        rules.splice(idx, 1);
+                        if (type === 'add') addRules = rules; else minusRules = rules;
+                        saveRules();
+                        renderItemGrid();
+                    }
+                });
+            });
+            document.getElementById('minusItemGrid').addEventListener('click', (e) => {
+                const delBtn = e.target.closest('.item-del-btn');
+                if (!delBtn) return;
+                const type = delBtn.dataset.type;
+                const rules = type === 'add' ? addRules : minusRules;
+                const ruleId = delBtn.dataset.id;
+                const rule = rules.find(r => r.id === ruleId);
+                if (!rule) return;
+                showConfirm(`确认删除${type === 'add' ? '加分' : '扣分'}规则「${rule.name}」？`, () => {
+                    const idx = rules.findIndex(r => r.id === ruleId);
+                    if (idx !== -1) {
+                        rules.splice(idx, 1);
+                        if (type === 'add') addRules = rules; else minusRules = rules;
+                        saveRules();
+                        renderItemGrid();
+                    }
+                });
+            });
+
+            // 加分/扣分弹窗内：新增规则
+            document.getElementById('addItemGrid').addEventListener('click', (e) => {
+                const addBtn = e.target.closest('.item-add-btn');
+                if (!addBtn) return;
+                addRuleType = 'add';
+                document.getElementById('sheetTitle').textContent = '新增加分规则';
+                document.getElementById('sheetScoreHint').textContent = '正数加分';
+                document.getElementById('sheetRuleName').value = '';
+                document.getElementById('sheetRuleScore').value = '';
+                document.getElementById('sheetRuleName').focus();
+                document.getElementById('addRuleSheet').classList.add('show');
+            });
+            document.getElementById('minusItemGrid').addEventListener('click', (e) => {
+                const addBtn = e.target.closest('.item-add-btn');
+                if (!addBtn) return;
+                addRuleType = 'minus';
+                document.getElementById('sheetTitle').textContent = '新增扣分规则';
+                document.getElementById('sheetScoreHint').textContent = '负数扣分';
+                document.getElementById('sheetRuleName').value = '';
+                document.getElementById('sheetRuleScore').value = '';
+                document.getElementById('sheetRuleName').focus();
+                document.getElementById('addRuleSheet').classList.add('show');
             });
 
             // 原有弹窗开关事件
