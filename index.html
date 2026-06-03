@@ -2605,10 +2605,6 @@
 
             // 原有弹窗开关事件
             document.getElementById('openAddModal').addEventListener('click', () => {
-                if (todayData.isSettled) {
-                    showTip('今日已结算，无法修改数据');
-                    return;
-                }
                 selectedAddItem = null;
                 document.getElementById('addRemark').value = '';
                 document.querySelectorAll('.add-item-btn').forEach(b => {
@@ -2621,10 +2617,6 @@
                 document.getElementById('addModal').classList.remove('show');
             });
             document.getElementById('openMinusModal').addEventListener('click', () => {
-                if (todayData.isSettled) {
-                    showTip('今日已结算，无法修改数据');
-                    return;
-                }
                 selectedMinusItem = null;
                 document.getElementById('minusRemark').value = '';
                 document.querySelectorAll('.minus-item-btn').forEach(b => {
@@ -2640,10 +2632,6 @@
             // 原有记录删除功能
             document.getElementById('recordList').addEventListener('click', (e) => {
                 if (e.target.classList.contains('delete-btn')) {
-                    if (todayData.isSettled) {
-                        showTip('今日已结算，无法删除记录');
-                        return;
-                    }
                     const index = e.target.dataset.index;
                     const record = todayData.records[index];
                     todayData.coin -= record.score;
@@ -2654,13 +2642,10 @@
                 }
             });
 
-            // 原有结算、重置功能
+            // 原有结算、重置功能（支持多次结算更新）
             document.getElementById('todaySettle').addEventListener('click', () => {
-                if (todayData.isSettled) {
-                    showTip('今日已结算，无需重复操作');
-                    return;
-                }
-                showConfirm('确认结算今日数据？结算后将锁定数据，无法修改', () => {
+                const msg = todayData.isSettled ? '今日已结算过，确认重新结算？将用最新数据覆盖上次结算。' : '确认结算今日数据？';
+                showConfirm(msg, () => {
                     todayData.isSettled = true;
                     weekData = weekData.filter(item => item.date !== todayData.date);
                     if (getWeekDay() >= 1 && getWeekDay() <= 6) {
@@ -2668,7 +2653,7 @@
                             date: todayData.date,
                             weekDay: getWeekDay(),
                             finalCoin: todayData.coin,
-                            records: todayData.records
+                            records: [...todayData.records]
                         });
                     }
                     saveData();
