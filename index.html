@@ -950,7 +950,7 @@
         }
 
         .item-btn {
-            padding: 12px 8px;
+            padding: 12px 8px 12px 28px;
             border-radius: 12px;
             border: 2px solid var(--light-purple);
             background: var(--light-purple);
@@ -963,6 +963,7 @@
             -webkit-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
+            width: 100%;
         }
 
         .item-btn:active {
@@ -1030,6 +1031,43 @@
         .item-add-btn:active {
             background: #f5f5f5;
             border-color: var(--main-purple);
+            color: var(--main-purple);
+        }
+
+        /* 拖拽手柄 */
+        .item-grip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 24px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #ccc;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            z-index: 1;
+        }
+        .item-grip:active {
+            cursor: grabbing;
+        }
+        .item-btn-wrap.dragging {
+            opacity: 0.4;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .item-btn-wrap.dragging .item-grip {
+            cursor: grabbing;
+        }
+        .item-btn-wrap.drag-over .item-btn {
+            border-color: var(--main-purple);
+            background: #f0edff;
+        }
+        .item-btn-wrap.drag-over .item-grip {
             color: var(--main-purple);
         }
 
@@ -1665,16 +1703,18 @@
 
         function renderItemGrid() {
             const addGrid = document.getElementById('addItemGrid');
-            addGrid.innerHTML = addRules.map(item => `
-                <div class="item-btn-wrap">
+            addGrid.innerHTML = addRules.map((item, index) => `
+                <div class="item-btn-wrap" data-index="${index}">
+                    <span class="item-grip">⠿</span>
                     <button class="item-btn add-item-btn" data-id="${item.id}" data-type="add">${item.name} +${item.score}</button>
                     <button class="item-del-btn" data-id="${item.id}" data-type="add" aria-label="删除">×</button>
                 </div>
             `).join('') + '<button class="item-add-btn" data-type="add">+ 添加加分规则</button>';
 
             const minusGrid = document.getElementById('minusItemGrid');
-            minusGrid.innerHTML = minusRules.map(item => `
-                <div class="item-btn-wrap">
+            minusGrid.innerHTML = minusRules.map((item, index) => `
+                <div class="item-btn-wrap" data-index="${index}">
+                    <span class="item-grip">⠿</span>
                     <button class="item-btn minus-item-btn" data-id="${item.id}" data-type="minus">${item.name} ${item.score}</button>
                     <button class="item-del-btn" data-id="${item.id}" data-type="minus" aria-label="删除">×</button>
                 </div>
@@ -2701,19 +2741,92 @@
                 document.getElementById('sheetRuleName').value = '';
                 document.getElementById('sheetRuleScore').value = '';
                 document.getElementById('sheetRuleName').focus();
-                document.getElementById('addRuleSheet').classList.add('show');
+            document.getElementById('addRuleSheet').classList.add('show');
             });
-            document.getElementById('minusItemGrid').addEventListener('click', (e) => {
-                const addBtn = e.target.closest('.item-add-btn');
-                if (!addBtn) return;
-                addRuleType = 'minus';
-                document.getElementById('sheetTitle').textContent = '新增扣分规则';
-                document.getElementById('sheetScoreHint').textContent = '负数扣分';
-                document.getElementById('sheetRuleName').value = '';
-                document.getElementById('sheetRuleScore').value = '';
-                document.getElementById('sheetRuleName').focus();
-                document.getElementById('addRuleSheet').classList.add('show');
-            });
+
+            // 加分/扣分弹窗内：拖拽排序
+            function initGridDrag(grid) {
+                let dragSrc = null;
+                let dragIndex = -1;
+                let offsetX = 0, offsetY = 0;
+
+                function getRules() {
+                    return grid.id === 'addItemGrid' ? addRules : minusRules;
+                }
+                function setRules(rules) {
+                    if (grid.id === 'addItemGrid') addRules = rules; else minusRules = rules;
+                }
+
+                function onStart(e) {
+                    const grip = e.target.closest('.item-grip');
+                    if (!grip) return;
+                    const wrap = grip.closest('.item-btn-wrap');
+                    if (!wrap) return;
+                    e.preventDefault();
+                    const cx = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                    const cy = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+                    dragSrc = wrap;
+                    dragIndex = parseInt(wrap.dataset.index);
+                    offsetX = cx;
+                    offsetY = cy;
+                    wrap.classList.add('dragging');
+                    wrap.style.transition = 'none';
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onEnd);
+                    document.addEventListener('touchmove', onMove, { passive: false });
+                    document.addEventListener('touchend', onEnd);
+                }
+
+                function onMove(e) {
+                    if (!dragSrc) return;
+                    e.preventDefault();
+                    const cx = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                    const cy = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+                    dragSrc.style.transform = `translate(${cx - offsetX}px, ${cy - offsetY}px)`;
+                    grid.querySelectorAll('.item-btn-wrap').forEach(w => w.classList.remove('drag-over'));
+                    const el = document.elementFromPoint(cx, cy);
+                    if (el) {
+                        const target = el.closest('.item-btn-wrap');
+                        if (target && target !== dragSrc) target.classList.add('drag-over');
+                    }
+                }
+
+                function onEnd(e) {
+                    if (!dragSrc) { cleanup(); return; }
+                    const targetWrap = grid.querySelector('.item-btn-wrap.drag-over');
+                    if (targetWrap) {
+                        const targetIndex = parseInt(targetWrap.dataset.index);
+                        const rules = getRules();
+                        if (dragIndex >= 0 && dragIndex < rules.length && targetIndex >= 0 && targetIndex < rules.length && dragIndex !== targetIndex) {
+                            const [moved] = rules.splice(dragIndex, 1);
+                            rules.splice(targetIndex, 0, moved);
+                            setRules(rules);
+                            saveRules();
+                            renderItemGrid();
+                        }
+                    }
+                    cleanup();
+                }
+
+                function cleanup() {
+                    if (dragSrc) {
+                        dragSrc.style.transition = '';
+                        dragSrc.style.transform = '';
+                        dragSrc.classList.remove('dragging');
+                    }
+                    grid.querySelectorAll('.item-btn-wrap').forEach(w => w.classList.remove('drag-over'));
+                    dragSrc = null;
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onEnd);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onEnd);
+                }
+
+                grid.addEventListener('mousedown', onStart);
+                grid.addEventListener('touchstart', onStart, { passive: false });
+            }
+            initGridDrag(document.getElementById('addItemGrid'));
+            initGridDrag(document.getElementById('minusItemGrid'));
 
             // 原有弹窗开关事件
             document.getElementById('openAddModal').addEventListener('click', () => {
