@@ -2735,13 +2735,26 @@
             document.getElementById('addItemGrid').addEventListener('click', (e) => {
                 const addBtn = e.target.closest('.item-add-btn');
                 if (!addBtn) return;
-                addRuleType = 'add';
-                document.getElementById('sheetTitle').textContent = '新增加分规则';
-                document.getElementById('sheetScoreHint').textContent = '正数加分';
+                addRuleType = addBtn.dataset.type;
+                const isAdd = addRuleType === 'add';
+                document.getElementById('sheetTitle').textContent = isAdd ? '新增加分规则' : '新增扣分规则';
+                document.getElementById('sheetScoreHint').textContent = isAdd ? '正数加分' : '负数扣分';
                 document.getElementById('sheetRuleName').value = '';
                 document.getElementById('sheetRuleScore').value = '';
                 document.getElementById('sheetRuleName').focus();
-            document.getElementById('addRuleSheet').classList.add('show');
+                document.getElementById('addRuleSheet').classList.add('show');
+            });
+            document.getElementById('minusItemGrid').addEventListener('click', (e) => {
+                const addBtn = e.target.closest('.item-add-btn');
+                if (!addBtn) return;
+                addRuleType = addBtn.dataset.type;
+                const isAdd = addRuleType === 'add';
+                document.getElementById('sheetTitle').textContent = isAdd ? '新增加分规则' : '新增扣分规则';
+                document.getElementById('sheetScoreHint').textContent = isAdd ? '正数加分' : '负数扣分';
+                document.getElementById('sheetRuleName').value = '';
+                document.getElementById('sheetRuleScore').value = '';
+                document.getElementById('sheetRuleName').focus();
+                document.getElementById('addRuleSheet').classList.add('show');
             });
 
             // 加分/扣分弹窗内：拖拽排序
