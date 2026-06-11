@@ -1,8 +1,15 @@
 {
   "todayData": {
     "date": "2026-6-11",
-    "coin": 2,
+    "coin": 4,
     "records": [
+      {
+        "id": 1781178094980,
+        "name": "完成一项任务",
+        "score": 2,
+        "remark": "作业",
+        "time": "19:41"
+      },
       {
         "id": 1781175964629,
         "name": "完成一项任务",
@@ -11,7 +18,7 @@
         "time": "19:06"
       }
     ],
-    "isSettled": false
+    "isSettled": true
   },
   "weekData": [
     {
@@ -993,6 +1000,27 @@
           "time": "19:46"
         }
       ]
+    },
+    {
+      "date": "2026-6-11",
+      "weekDay": 4,
+      "finalCoin": 4,
+      "records": [
+        {
+          "id": 1781178094980,
+          "name": "完成一项任务",
+          "score": 2,
+          "remark": "作业",
+          "time": "19:41"
+        },
+        {
+          "id": 1781175964629,
+          "name": "完成一项任务",
+          "score": 2,
+          "remark": "",
+          "time": "19:06"
+        }
+      ]
     }
   ],
   "addRules": [
@@ -1164,5 +1192,5 @@
       "score": -1
     }
   ],
-  "exportTime": "2026-06-11T11:06:06.396Z"
+  "exportTime": "2026-06-11T13:02:22.582Z"
 }
