@@ -1363,6 +1363,36 @@
             transform: scale(0.96);
         }
 
+        /* GitHub 同步弹窗（保留原紫色主题，按钮大小参考艾宾浩斯） */
+        .github-sync-modal { background: white; border-radius: 28px; padding: 28px 24px; max-width: 380px; width: 92%; }
+        .github-sync-title { font-size: 18px; margin-bottom: 12px; color: var(--text-dark); text-align: center; }
+        .github-sync-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 16px; }
+        .github-sync-desc strong { color: var(--text-dark); }
+        .github-sync-field { width: 100%; padding: 12px 14px; border: 1px solid #d0d9e6; border-radius: 12px; font-size: 14px; margin-bottom: 6px; outline: none; -webkit-appearance: none; box-sizing: border-box; }
+        .github-sync-field:focus { border-color: var(--main-purple); box-shadow: 0 0 0 3px rgba(147,112,219,0.12); }
+        .github-sync-tip { font-size: 12px; color: #94a3b8; margin-bottom: 14px; line-height: 1.4; }
+        .github-sync-tip a { color: #3B82F6; text-decoration: none; }
+        .github-sync-actions { display: flex; gap: 10px; margin-top: 8px; flex-direction: column; }
+        .github-sync-btn { flex: 1; padding: 12px; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; -webkit-appearance: none; }
+        .github-sync-btn.cancel { background: #FFF0F5; color: var(--deep-orange); }
+        .github-sync-btn.submit { background: linear-gradient(135deg, var(--main-purple) 0%, #7B68EE 100%); color: white; }
+        .github-sync-btn.submit:active { opacity: 0.85; }
+        .github-sync-btn.cancel:active { background: #FFE4EE; }
+        .github-sync-status { margin-top: 10px; font-size: 13px; color: #475569; text-align: center; min-height: 20px; padding: 8px 12px; border-radius: 10px; background: #f8fafc; }
+        .github-sync-status.success { color: #15803d; background: #f0fdf4; }
+        .github-sync-status.error { color: #dc2626; background: #fef2f2; }
+        .github-sync-status.loading { color: #1e40af; background: #dbeafe; }
+
+        /* 深色模式 - 同步弹窗适配 */
+        @media (prefers-color-scheme: dark) {
+            .github-sync-modal { background: #1E1E2E; }
+            .github-sync-title { color: #E0E0E0; }
+            .github-sync-desc { color: #94a3b8; }
+            .github-sync-desc strong { color: #E0E0E0; }
+            .github-sync-field { background: #2D2D44; color: #E0E0E0; border-color: #444; }
+            .github-sync-btn.cancel { background: #3A1B2A; color: var(--deep-orange); }
+        }
+
         /* 大字体适配：确保布局不溢出 */
         @media (min-resolution: 192dpi) {
             .coin-num { font-size: 2rem; }
@@ -1564,15 +1594,15 @@
 
     <!-- GitHub同步弹窗 -->
     <div class="modal-mask" id="syncModal" role="dialog" aria-modal="true" aria-label="GitHub同步">
-        <div class="modal-content" style="max-width:380px;padding:24px 20px;">
-            <div class="modal-title">☁️ GitHub 同步</div>
-            <p style="font-size:14px;color:#64748b;margin:10px 0 14px;line-height:1.5;">将数据同步到 <strong>wangwx2019/jinbijiesuan</strong> 仓库，多设备共享进度。</p>
-            <input type="password" id="syncTokenInput" placeholder="GitHub Personal Access Token" style="width:100%;padding:12px 14px;border:2px solid #d0d9e6;border-radius:12px;font-size:14px;outline:none;margin-bottom:6px;box-sizing:border-box;" oninput="localStorage.setItem('github_token_gold', obfuscateToken(this.value.trim()))">
-            <p style="font-size:12px;color:#94a3b8;margin-bottom:14px;line-height:1.4;">需要 <strong>repo</strong> 权限。可在 <a href="https://github.com/settings/tokens" target="_blank" style="color:#3B82F6;text-decoration:none;">GitHub Token设置</a> 生成。</p>
-            <div id="syncStatus" style="font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;">就绪</div>
-            <div style="display:flex;flex-direction:column;gap:16px;">
-                <button class="bottom-btn" id="doSyncToGithub" style="border-color:var(--main-purple);color:var(--main-purple);height:72px;font-size:20px;border-radius:18px;padding:0 20px;">☁️ 同步到 GitHub</button>
-                <button class="bottom-btn danger-btn" id="closeSyncModal" style="height:72px;font-size:20px;border-radius:18px;padding:0 20px;">关闭</button>
+        <div class="github-sync-modal">
+            <h3 class="github-sync-title">☁️ GitHub 同步</h3>
+            <p class="github-sync-desc">将数据同步到 <strong>***an</strong> 仓库，多设备共享进度。</p>
+            <input type="password" id="syncTokenInput" class="github-sync-field" placeholder="GitHub Personal Access Token" autocomplete="off" spellcheck="false" oninput="localStorage.setItem('github_token_gold', obfuscateToken(this.value.trim()))">
+            <p class="github-sync-tip">需要 <strong>repo</strong> 权限。可在 <a href="https://github.com/settings/tokens" target="_blank">GitHub Token设置</a> 生成。</p>
+            <div id="syncStatus" class="github-sync-status">就绪</div>
+            <div class="github-sync-actions">
+                <button class="github-sync-btn submit" id="doSyncToGithub">☁️ 同步到 GitHub</button>
+                <button class="github-sync-btn cancel" id="closeSyncModal">关闭</button>
             </div>
         </div>
     </div>
@@ -3399,7 +3429,7 @@
                 const saved = localStorage.getItem('github_token_gold');
                 if (saved) document.getElementById('syncTokenInput').value = deobfuscateToken(saved);
                 document.getElementById('syncStatus').textContent = '就绪';
-                document.getElementById('syncStatus').style.cssText = 'font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;';
+                document.getElementById('syncStatus').className = 'github-sync-status';
                 document.getElementById('syncModal').classList.add('show');
                 focusFirstInModal(document.getElementById('syncModal'));
             });
@@ -3476,7 +3506,7 @@
             const data = { todayData, weekData, addRules, minusRules, exportTime: new Date().toISOString() };
             const statusEl = document.getElementById('syncStatus');
             statusEl.textContent = '⏳ 正在同步...';
-            statusEl.style.cssText = 'font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#fff3cd;margin-bottom:10px;';
+            statusEl.className = 'github-sync-status loading';
             try {
                 const url = `https://api.github.com/repos/${GOLD_GITHUB_REPO}/contents/${GOLD_GITHUB_PATH}`;
                 let sha = null;
@@ -3491,7 +3521,7 @@
                 } else if (check.status !== 404) {
                     const e = await check.json();
                     statusEl.textContent = '❌ ' + e.message;
-                    statusEl.style.background = '#fee2e2';
+                    statusEl.className = 'github-sync-status error';
                     return;
                 }
                 // 冲突检测：如果远程数据更新，提示用户
@@ -3500,7 +3530,7 @@
                     const localTime = new Date(data.exportTime).getTime();
                     if (remoteTime > localTime) {
                         statusEl.innerHTML = '⚠️ 远程数据更新（' + new Date(remoteData.exportTime).toLocaleString('zh-CN') + '）<br><span style="font-size:12px;">点击同步将覆盖远程数据</span>';
-                        statusEl.style.background = '#fef3c7';
+                        statusEl.className = 'github-sync-status loading';
                         // 添加覆盖按钮
                         const overrideBtn = document.createElement('button');
                         overrideBtn.textContent = '确认覆盖';
@@ -3516,12 +3546,12 @@
                 await doSyncToGithub(data, sha, token, statusEl);
             } catch(e) {
                 statusEl.textContent = '❌ ' + e.message;
-                statusEl.style.background = '#fee2e2';
+                statusEl.className = 'github-sync-status error';
             }
         }
         async function doSyncToGithub(data, sha, token, statusEl) {
             statusEl.textContent = '⏳ 正在同步...';
-            statusEl.style.cssText = 'font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#fff3cd;margin-bottom:10px;';
+            statusEl.className = 'github-sync-status loading';
             const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
             const url = `https://api.github.com/repos/${GOLD_GITHUB_REPO}/contents/${GOLD_GITHUB_PATH}`;
             const body = { message: `金币数据同步 ${new Date().toLocaleString('zh-CN')}`, content };
@@ -3529,11 +3559,11 @@
             const res = await fetch(url, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' }, body: JSON.stringify(body) });
             if (res.ok) {
                 statusEl.textContent = '✅ 同步成功！';
-                statusEl.style.cssText = 'font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#d1fae5;margin-bottom:10px;';
+                statusEl.className = 'github-sync-status success';
             } else {
                 const e = await res.json();
                 statusEl.textContent = '❌ ' + e.message;
-                statusEl.style.background = '#fee2e2';
+                statusEl.className = 'github-sync-status error';
             }
         }
 
