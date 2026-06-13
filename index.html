@@ -88,6 +88,8 @@
             .analysis-box { background: #2D2D44; color: #E0E0E0; }
             .analysis-box.good { background: #1B3A2A; }
             .analysis-box.bad { background: #3A1B2A; }
+            .tag-good { background: rgba(60, 179, 113, 0.25); color: #81C784; }
+            .tag-bad { background: rgba(255, 105, 180, 0.25); color: #F48FB1; }
             .week-card { background: #2D2D44; }
             .chart-box { background: #2D2D44; }
             .rule-item-with-edit { background: #2D2D44; border-color: #444; }
@@ -1225,6 +1227,37 @@
             font-weight: bold;
             margin-bottom: 6px;
             color: #483D8B;
+        }
+        /* 分析标签样式 */
+        .analysis-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .analysis-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .analysis-tag small {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        .tag-good {
+            background: rgba(60, 179, 113, 0.15);
+            color: #2E7D32;
+        }
+        .tag-bad {
+            background: rgba(255, 105, 180, 0.15);
+            color: #C2185B;
+        }
+        .analysis-empty {
+            font-size: 13px;
+            color: #999;
         }
 
         /* 每周分析图表样式 */
@@ -2467,37 +2500,48 @@
                     });
                 }
 
-                // 本周 vs 上周文字对比
+                // 本周 vs 上周文字对比（简洁版 + 人性化）
                 const currWeek = weekGroups[weekGroups.length - 1];
                 const lastWeek = weekGroups[weekGroups.length - 2];
                 const currCounts = countItems(currWeek.entries);
                 const lastCounts = countItems(lastWeek.entries);
 
                 let good = [], bad = [];
+                // 加分规则对比
                 for (let name in currCounts.add) {
                     const c = currCounts.add[name];
                     const l = lastCounts.add[name] || 0;
-                    if (c > l) good.push('✅ ' + name + ' 加分次数变多啦！');
-                    if (c < l) bad.push('❌ ' + name + ' 加分次数减少了');
+                    if (c > l) good.push({ text: name, tag: '🔥 变多' + (c - l) });
+                    if (c < l) bad.push({ text: name, tag: '📉 少了' + (l - c) });
                 }
                 for (let name in lastCounts.add) {
-                    if (!currCounts.add[name]) bad.push('❌ ' + name + ' 最近没有加分了');
+                    if (!currCounts.add[name]) bad.push({ text: name, tag: '😢 消失了' });
                 }
+                // 扣分规则对比
                 for (let name in currCounts.minus) {
                     const c = currCounts.minus[name];
                     const l = lastCounts.minus[name] || 0;
-                    if (c < l) good.push('✅ ' + name + ' 扣分变少，进步很大！');
-                    if (c > l) bad.push('❌ ' + name + ' 扣分变多了，要注意哦');
+                    if (c < l) good.push({ text: name, tag: '🌟 进步' + (l - c) });
+                    if (c > l) bad.push({ text: name, tag: '😟 多了' + (c - l) });
                 }
                 for (let name in lastCounts.minus) {
-                    if (!currCounts.minus[name]) good.push('✅ ' + name + ' 最近没有扣分，太棒了！');
+                    if (!currCounts.minus[name]) good.push({ text: name, tag: '🎉 消失了' });
                 }
 
-                if (good.length === 0) good.push('本周暂时没有明显进步项，继续加油！');
-                if (bad.length === 0) bad.push('本周没有退步项，表现非常优秀！');
-
-                let analysisHtml = `<div class="analysis-box good"><div class="analysis-title">🎉 进步的地方</div>` + good.join('<br>') + `</div>`;
-                analysisHtml += `<div class="analysis-box bad"><div class="analysis-title">⚠️ 需要改进</div>` + bad.join('<br>') + `</div>`;
+                let analysisHtml = '<div class="analysis-box good"><div class="analysis-title">🎉 进步</div><div class="analysis-tags">';
+                if (good.length === 0) {
+                    analysisHtml += '<span class="analysis-empty">继续加油哦～</span>';
+                } else {
+                    good.forEach(g => { analysisHtml += `<span class="analysis-tag tag-good">${g.text}<small>${g.tag}</small></span>`; });
+                }
+                analysisHtml += '</div></div>';
+                analysisHtml += '<div class="analysis-box bad"><div class="analysis-title">💪 加油</div><div class="analysis-tags">';
+                if (bad.length === 0) {
+                    analysisHtml += '<span class="analysis-empty">太棒了！</span>';
+                } else {
+                    bad.forEach(b => { analysisHtml += `<span class="analysis-tag tag-bad">${b.text}<small>${b.tag}</small></span>`; });
+                }
+                analysisHtml += '</div></div>';
                 statContent.insertAdjacentHTML('beforeend', analysisHtml);
             } else if (weekGroups.length === 1) {
                 statContent.insertAdjacentHTML('beforeend', '<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>');
@@ -2676,31 +2720,41 @@
                 const lastCounts = countItems(lastWeek.entries);
 
                 let good = [], bad = [];
-
+                // 加分规则对比
                 for (let name in currCounts.add) {
                     const c = currCounts.add[name];
                     const l = lastCounts.add[name] || 0;
-                    if (c > l) good.push(`✅ ${name} 加分次数变多啦！`);
-                    if (c < l) bad.push(`❌ ${name} 加分次数减少了`);
+                    if (c > l) good.push({ text: name, tag: '🔥 变多' + (c - l) });
+                    if (c < l) bad.push({ text: name, tag: '📉 少了' + (l - c) });
                 }
                 for (let name in lastCounts.add) {
-                    if (!currCounts.add[name]) bad.push(`❌ ${name} 最近没有加分了`);
+                    if (!currCounts.add[name]) bad.push({ text: name, tag: '😢 消失了' });
                 }
+                // 扣分规则对比
                 for (let name in currCounts.minus) {
                     const c = currCounts.minus[name];
                     const l = lastCounts.minus[name] || 0;
-                    if (c < l) good.push(`✅ ${name} 扣分变少，进步很大！`);
-                    if (c > l) bad.push(`❌ ${name} 扣分变多了，要注意哦`);
+                    if (c < l) good.push({ text: name, tag: '🌟 进步' + (l - c) });
+                    if (c > l) bad.push({ text: name, tag: '😟 多了' + (c - l) });
                 }
                 for (let name in lastCounts.minus) {
-                    if (!currCounts.minus[name]) good.push(`✅ ${name} 最近没有扣分，太棒了！`);
+                    if (!currCounts.minus[name]) good.push({ text: name, tag: '🎉 消失了' });
                 }
 
-                if (good.length === 0) good.push('本周暂时没有明显进步项，继续加油！');
-                if (bad.length === 0) bad.push('本周没有退步项，表现非常优秀！');
-
-                html += `<div class="analysis-box good"><div class="analysis-title">🎉 进步的地方</div>${good.join('<br>')}</div>`;
-                html += `<div class="analysis-box bad"><div class="analysis-title">⚠️ 需要改进</div>${bad.join('<br>')}</div>`;
+                html += '<div class="analysis-box good"><div class="analysis-title">🎉 进步</div><div class="analysis-tags">';
+                if (good.length === 0) {
+                    html += '<span class="analysis-empty">继续加油哦～</span>';
+                } else {
+                    good.forEach(g => { html += `<span class="analysis-tag tag-good">${g.text}<small>${g.tag}</small></span>`; });
+                }
+                html += '</div></div>';
+                html += '<div class="analysis-box bad"><div class="analysis-title">💪 加油</div><div class="analysis-tags">';
+                if (bad.length === 0) {
+                    html += '<span class="analysis-empty">太棒了！</span>';
+                } else {
+                    bad.forEach(b => { html += `<span class="analysis-tag tag-bad">${b.text}<small>${b.tag}</small></span>`; });
+                }
+                html += '</div></div>';
             } else {
                 html += `<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>`;
             }
