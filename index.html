@@ -9,8 +9,14 @@
     <link rel="apple-touch-icon" sizes="180x180" href="xiaomabaoli.png">
     <link rel="icon" type="image/png" sizes="32x32" href="xiaomabaoli.png">
     <link rel="icon" type="image/png" sizes="16x16" href="xiaomabaoli.png">
+    <!-- PWA 支持 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#9370DB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="金币记录器">
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js 按需加载，不在此处引入 -->
     <style>
         * {
             margin: 0;
@@ -20,6 +26,12 @@
         }
 
         :root {
+            /* 基础字号，支持 rem 缩放 */
+            --font-size-base: 16px;
+            --font-size-sm: 0.875rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.5rem;
+            --font-size-xxl: 2.5rem;
             /* 小马宝莉主题配色 */
             --main-purple: #9370DB;
             --light-purple: #E6E6FA;
@@ -40,6 +52,51 @@
             color: var(--text-dark);
             overflow-x: hidden;
             padding-bottom: calc(env(safe-area-inset-bottom) + 90px);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* 深色模式 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --main-purple: #B39DDB;
+                --light-purple: #2D2D44;
+                --add-green: #66BB6A;
+                --deep-green: #43A047;
+                --minus-orange: #F48FB1;
+                --deep-orange: #EC407A;
+                --bg-gradient: linear-gradient(180deg, #1A1A2E 0%, #16213E 100%);
+                --card-white: rgba(30, 30, 46, 0.95);
+                --text-dark: #E0E0E0;
+                --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            }
+            body {
+                color: var(--text-dark);
+            }
+            .record-time { color: #aaa; }
+            .empty-tip { color: #888; }
+            .bottom-btn-group { background: #1A1A2E; box-shadow: 0 -2px 10px rgba(0,0,0,0.3); }
+            .bottom-btn { background: #2D2D44; color: #E0E0E0; border-color: var(--main-purple); }
+            .bottom-btn:active { background: var(--light-purple); }
+            .page-header { background: #1A1A2E; border-color: #333; }
+            .page-view { background: #1A1A2E; }
+            .modal-content, .fixed-btn-modal, .edit-score-modal, .bottom-sheet { background: #1E1E2E; }
+            .sheet-input { background: #2D2D44; color: #E0E0E0; border-color: #444; }
+            .sheet-btn-cancel { background: #333; color: #ccc; }
+            .cancel-btn { background: #333; color: #ccc; }
+            .stat-item { background: rgba(45, 45, 68, 0.8); }
+            .stat-bar-track, .leaderboard-bar-track { background: #333; }
+            .analysis-box { background: #2D2D44; color: #E0E0E0; }
+            .analysis-box.good { background: #1B3A2A; }
+            .analysis-box.bad { background: #3A1B2A; }
+            .week-card { background: #2D2D44; }
+            .chart-box { background: #2D2D44; }
+            .rule-item-with-edit { background: #2D2D44; border-color: #444; }
+            .rule-item-with-edit:active { background: #3D3D54; }
+            .rule-edit-input, .rule-edit-score { background: #1E1E2E; color: #E0E0E0; border-color: #444; }
+            .record-item { background: rgba(45, 45, 68, 0.8); }
+            .add-item { background: rgba(27, 58, 42, 0.6); }
+            .minus-item { background: rgba(58, 27, 42, 0.6); }
+            #tipModal .modal-content, #confirmModal .modal-content { background: #1E1E2E; }
         }
 
         /* 顶部数据看板 */
@@ -586,6 +643,10 @@
         @keyframes rule-slide-out {
             from { opacity: 1; transform: translateY(0); max-height: 100px; }
             to { opacity: 0; transform: translateY(-10px); max-height: 0; padding: 0; margin: 0; }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translate(-50%, 10px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
         }
 
         /* 添加规则触发按钮 */
@@ -1295,6 +1356,23 @@
         .edit-score-save:active {
             transform: scale(0.96);
         }
+
+        /* 大字体适配：确保布局不溢出 */
+        @media (min-resolution: 192dpi) {
+            .coin-num { font-size: 2rem; }
+            .main-btn { font-size: 1.2rem; }
+            .card-title { font-size: 0.9rem; }
+        }
+
+        /* 高对比度模式支持 */
+        @media (forced-colors: active) {
+            .main-btn, .bottom-btn {
+                border: 2px solid ButtonText;
+            }
+            .modal-mask {
+                background: Canvas;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1302,18 +1380,18 @@
     <div class="data-board">
         <div class="board-card">
             <div class="card-title">本周累计金币</div>
-            <div class="coin-num" id="weekTotalCoin">0</div>
+            <div class="coin-num" id="weekTotalCoin" aria-live="polite" aria-atomic="true">0</div>
         </div>
         <div class="board-card minus-card">
             <div class="card-title">今日实时金币</div>
-            <div class="coin-num" id="todayCoin">0</div>
+            <div class="coin-num" id="todayCoin" aria-live="polite" aria-atomic="true">0</div>
         </div>
     </div>
 
     <!-- 核心操作按钮 -->
     <div class="main-btn-group">
-        <button class="main-btn add-btn" id="openAddModal">➕ 加分</button>
-        <button class="main-btn minus-btn" id="openMinusModal">➖ 扣分</button>
+        <button class="main-btn add-btn" id="openAddModal" aria-label="加分">➕ 加分</button>
+        <button class="main-btn minus-btn" id="openMinusModal" aria-label="扣分">➖ 扣分</button>
     </div>
 
     <!-- 记录区域 -->
@@ -1325,20 +1403,20 @@
     </div>
 
     <!-- 底部功能栏 -->
-    <div class="bottom-btn-group">
-        <button class="bottom-btn" id="todaySettle">今日结算</button>
-        <button class="bottom-btn danger-btn" id="resetBtn">重置</button>
-        <button class="bottom-btn" id="openWeekStat">周统计</button>
+    <div class="bottom-btn-group" role="toolbar" aria-label="功能栏">
+        <button class="bottom-btn" id="todaySettle" aria-label="今日结算">今日结算</button>
+        <button class="bottom-btn danger-btn" id="resetBtn" aria-label="重置">重置</button>
+        <button class="bottom-btn" id="openWeekStat" aria-label="周统计">周统计</button>
         <!-- 每周分析已合并入周统计 -->
-        <button class="bottom-btn" id="ruleSettings">规则设置</button>
-        <button class="bottom-btn" id="exportDataBtn" style="border-color:#3B82F6;color:#3B82F6;">📤 导出</button>
-        <button class="bottom-btn" id="syncDataBtn" style="border-color:#8B5CF6;color:#8B5CF6;">☁️ 同步</button>
+        <button class="bottom-btn" id="ruleSettings" aria-label="规则设置">规则设置</button>
+        <button class="bottom-btn" id="exportDataBtn" style="border-color:#3B82F6;color:#3B82F6;" aria-label="导出数据">📤 导出</button>
+        <button class="bottom-btn" id="syncDataBtn" style="border-color:#8B5CF6;color:#8B5CF6;" aria-label="同步数据">☁️ 同步</button>
     </div>
 
     <!-- 加分弹窗 -->
-    <div class="modal-mask" id="addModal">
+    <div class="modal-mask" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
         <div class="fixed-btn-modal">
-            <div class="modal-title">✨ 选择加分原因 ✨</div>
+            <div class="modal-title" id="addModalTitle">✨ 选择加分原因 ✨</div>
             <div class="modal-scroll-area">
                 <div class="item-grid" id="addItemGrid"></div>
                 <input type="text" class="remark-input" id="addRemark" placeholder="添加备注（可选）">
@@ -1353,9 +1431,9 @@
     </div>
 
     <!-- 扣分弹窗 -->
-    <div class="modal-mask" id="minusModal">
+    <div class="modal-mask" id="minusModal" role="dialog" aria-modal="true" aria-labelledby="minusModalTitle">
         <div class="fixed-btn-modal">
-            <div class="modal-title">💫 选择扣分原因 💫</div>
+            <div class="modal-title" id="minusModalTitle">💫 选择扣分原因 💫</div>
             <div class="modal-scroll-area">
                 <div class="item-grid" id="minusItemGrid"></div>
                 <input type="text" class="remark-input" id="minusRemark" placeholder="添加备注（可选）">
@@ -1372,7 +1450,7 @@
     <!-- 周统计页面 -->
     <div class="page-view" id="weekStatPage">
         <div class="page-header">
-            <button class="page-back-btn" id="closeWeekStat">←</button>
+            <button class="page-back-btn" id="closeWeekStat" aria-label="返回">←</button>
             <span class="page-title">📊 周统计报表</span>
         </div>
         <div class="page-content">
@@ -1383,7 +1461,7 @@
     <!-- 每周分析已合并入周统计页面 -->
 
     <!-- 重置选择弹窗 -->
-    <div class="modal-mask" id="resetChoiceModal">
+    <div class="modal-mask" id="resetChoiceModal" role="dialog" aria-modal="true" aria-label="选择重置类型">
         <div class="modal-content">
             <div class="modal-title">🔄 选择重置类型 🔄</div>
             <button class="reset-choice-btn reset-today-btn" id="doTodayReset">今日重置</button>
@@ -1395,7 +1473,7 @@
     <!-- 规则设置页面 -->
     <div class="page-view" id="ruleSettingsPage">
         <div class="page-header">
-            <button class="page-back-btn" id="closeRuleSettings">←</button>
+            <button class="page-back-btn" id="closeRuleSettings" aria-label="返回">←</button>
             <span class="page-title">⚙️ 规则设置</span>
         </div>
         <div class="page-content">
@@ -1414,7 +1492,7 @@
     </div>
 
     <!-- 新增规则底部弹出面板 -->
-    <div class="modal-mask" id="addRuleSheet">
+    <div class="modal-mask" id="addRuleSheet" role="dialog" aria-modal="true" aria-label="新增规则">
         <div class="bottom-sheet">
             <div class="bottom-sheet-handle"></div>
             <div class="bottom-sheet-title" id="sheetTitle">新增加分规则</div>
@@ -1433,15 +1511,15 @@
     </div>
 
     <!-- 普通提示框 -->
-    <div class="modal-mask" id="tipModal">
+    <div class="modal-mask" id="tipModal" role="alertdialog" aria-modal="true" aria-label="提示">
         <div class="modal-content">
             <div class="tip-text" id="tipText">提示内容</div>
-            <button class="tip-confirm-btn" id="closeTipModal">确定</button>
+            <button class="tip-confirm-btn" id="closeTipModal" aria-label="确定">确定</button>
         </div>
     </div>
 
     <!-- 确认提示框 -->
-    <div class="modal-mask" id="confirmModal">
+    <div class="modal-mask" id="confirmModal" role="alertdialog" aria-modal="true" aria-label="确认">
         <div class="modal-content">
             <div class="confirm-text" id="confirmText">确认内容</div>
             <div class="modal-btn-group">
@@ -1452,7 +1530,7 @@
     </div>
 
     <!-- 修改分值弹窗 -->
-    <div class="modal-mask" id="editScoreModal">
+    <div class="modal-mask" id="editScoreModal" role="dialog" aria-modal="true" aria-label="修改分值">
         <div class="edit-score-modal">
             <div class="modal-title">✏️ 修改分值 ✏️</div>
             <div class="edit-score-info" id="editScoreInfo"></div>
@@ -1465,7 +1543,7 @@
     </div>
 
     <!-- 导出弹窗 -->
-    <div class="modal-mask" id="exportModal">
+    <div class="modal-mask" id="exportModal" role="dialog" aria-modal="true" aria-label="数据管理">
         <div class="modal-content" style="max-width:380px;padding:24px 20px;">
             <div class="modal-title">📤 数据管理</div>
             <p style="font-size:15px;color:#666;margin:12px 0;line-height:1.5;">导出所有金币数据为JSON文件，或从备份文件恢复数据。</p>
@@ -1473,22 +1551,22 @@
                 <button class="bottom-btn" id="doExport" style="border-color:var(--deep-green);color:var(--deep-green);">📥 导出数据（下载JSON）</button>
                 <button class="bottom-btn" id="doImport" style="border-color:#3B82F6;color:#3B82F6;">📂 导入数据（选择JSON）</button>
                 <input type="file" id="importFileInput" accept=".json" style="display:none">
-                <button class="bottom-btn danger-btn" onclick="closeModal('exportModal')">关闭</button>
+                <button class="bottom-btn danger-btn" id="closeExportModal">关闭</button>
             </div>
         </div>
     </div>
 
     <!-- GitHub同步弹窗 -->
-    <div class="modal-mask" id="syncModal">
+    <div class="modal-mask" id="syncModal" role="dialog" aria-modal="true" aria-label="GitHub同步">
         <div class="modal-content" style="max-width:380px;padding:24px 20px;">
             <div class="modal-title">☁️ GitHub 同步</div>
             <p style="font-size:14px;color:#64748b;margin:10px 0 14px;line-height:1.5;">将数据同步到 <strong>wangwx2019/jinbijiesuan</strong> 仓库，多设备共享进度。</p>
-            <input type="password" id="syncTokenInput" placeholder="GitHub Personal Access Token" style="width:100%;padding:12px 14px;border:2px solid #d0d9e6;border-radius:12px;font-size:14px;outline:none;margin-bottom:6px;box-sizing:border-box;" oninput="localStorage.setItem('github_token_gold', this.value.trim())">
+            <input type="password" id="syncTokenInput" placeholder="GitHub Personal Access Token" style="width:100%;padding:12px 14px;border:2px solid #d0d9e6;border-radius:12px;font-size:14px;outline:none;margin-bottom:6px;box-sizing:border-box;" oninput="localStorage.setItem('github_token_gold', obfuscateToken(this.value.trim()))">
             <p style="font-size:12px;color:#94a3b8;margin-bottom:14px;line-height:1.4;">需要 <strong>repo</strong> 权限。可在 <a href="https://github.com/settings/tokens" target="_blank" style="color:#3B82F6;text-decoration:none;">GitHub Token设置</a> 生成。</p>
             <div id="syncStatus" style="font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;">就绪</div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-                <button class="bottom-btn" id="doSyncToGithub" style="border-color:var(--main-purple);color:var(--main-purple);">☁️ 同步到 GitHub</button>
-                <button class="bottom-btn danger-btn" onclick="closeModal('syncModal')">关闭</button>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <button class="bottom-btn" id="doSyncToGithub" style="border-color:var(--main-purple);color:var(--main-purple);height:64px;font-size:18px;border-radius:16px;">☁️ 同步到 GitHub</button>
+                <button class="bottom-btn danger-btn" id="closeSyncModal" style="height:64px;font-size:18px;border-radius:16px;">关闭</button>
             </div>
         </div>
     </div>
@@ -1535,16 +1613,76 @@
         let selectedAddItem = null;
         let selectedMinusItem = null;
         let confirmCallback = null;
+        // 撤销栈（最近一次操作）
+        let lastAction = null;
         // GitHub 仓库配置
         const GOLD_GITHUB_REPO = 'wangwx2019/jinbijiesuan';
         const GOLD_GITHUB_PATH = 'data/jinbijiesuan-data.json';
+        // 时间常量
+        const UNDO_TOAST_DURATION = 4000;      // 撤销提示显示4秒
+        const AUTO_SETTLE_HOUR = 23;           // 自动结算小时
+        const AUTO_SETTLE_MINUTE = 55;         // 自动结算分钟
+        const RULE_ANIMATION_DURATION = 250;   // 规则动画时长(ms)
+        const FOCUS_DELAY = 100;               // 焦点延迟(ms)
+        // 触觉反馈常量
+        const HAPTIC_SUCCESS_VIBRATE = 50;     // 成功振动
+        const HAPTIC_WARNING_VIBRATE = [30, 20, 30]; // 警告振动
+        const HAPTIC_ERROR_VIBRATE = [50, 30, 50];   // 错误振动
+        const HAPTIC_DEFAULT_VIBRATE = 25;     // 默认振动
+        // Chart.js 按需加载
+        const CHARTJS_CDN = 'https://cdn.jsdelivr.net/npm/chart.js';
+        let _chartLoaded = false;
+        function loadChartJs() {
+            return new Promise((resolve, reject) => {
+                if (_chartLoaded && typeof Chart !== 'undefined') {
+                    resolve();
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = CHARTJS_CDN;
+                script.onload = () => { _chartLoaded = true; resolve(); };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
         // 长按计时器
         let longPressTimer = null;
         let isLongPress = false;
         // 当前编辑的规则信息
         let currentEditRule = null;
 
-        init();
+        // Token 简单混淆
+        function obfuscateToken(str) { return str ? btoa(encodeURIComponent(str)) : ''; }
+        function deobfuscateToken(str) { try { return str ? decodeURIComponent(atob(str)) : ''; } catch(e) { return str || ''; } }
+        // XSS 防护：转义 HTML 特殊字符
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        // 屏幕阅读器播报
+        function announce(message) {
+            let announcer = document.getElementById('srAnnouncer');
+            if (!announcer) {
+                announcer = document.createElement('div');
+                announcer.id = 'srAnnouncer';
+                announcer.setAttribute('aria-live', 'assertive');
+                announcer.setAttribute('aria-atomic', 'true');
+                announcer.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;';
+                document.body.appendChild(announcer);
+            }
+            announcer.textContent = '';
+            setTimeout(() => { announcer.textContent = message; }, 100);
+        }
+        // 触觉反馈（移动端振动）
+        function hapticFeedback(type) {
+            if (!navigator.vibrate) return;
+            switch(type) {
+                case 'success': navigator.vibrate(HAPTIC_SUCCESS_VIBRATE); break;
+                case 'error': navigator.vibrate(HAPTIC_ERROR_VIBRATE); break;
+                case 'warning': navigator.vibrate(HAPTIC_WARNING_VIBRATE); break;
+                default: navigator.vibrate(HAPTIC_DEFAULT_VIBRATE);
+            }
+        }
 
         function getTodayDate() {
             const now = new Date();
@@ -1563,23 +1701,97 @@
         function showTip(msg) {
             document.getElementById('tipText').textContent = msg;
             document.getElementById('tipModal').classList.add('show');
+            focusFirstInModal(document.getElementById('tipModal'));
+        }
+        // 焦点管理
+        let lastFocusedElement = null;
+        function focusFirstInModal(modal) {
+            lastFocusedElement = document.activeElement;
+            setTimeout(() => {
+                const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                if (focusable) focusable.focus();
+            }, FOCUS_DELAY);
+        }
+        function trapFocus(e, modal) {
+            const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusable.length === 0) return;
+            const first = focusable[0], last = focusable[focusable.length - 1];
+            if (e.key === 'Tab') {
+                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }
+        }
+        function closeModalWithFocus(id) {
+            document.getElementById(id).classList.remove('show');
+            if (lastFocusedElement) { lastFocusedElement.focus(); lastFocusedElement = null; }
+        }
+        // 添加记录的公共逻辑
+        function addRecord(item, remark, modalId) {
+            if (!item) return false;
+            const newRecord = {
+                id: Date.now(),
+                name: item.name,
+                score: item.score,
+                remark: remark,
+                time: formatTime()
+            };
+            todayData.records.unshift(newRecord);
+            todayData.coin += item.score;
+            saveData();
+            renderCoin();
+            renderRecordList();
+            hapticFeedback(item.score > 0 ? 'success' : 'warning');
+            showUndoToast({ type: 'record', id: newRecord.id, name: newRecord.name, score: newRecord.score });
+            announce(`${item.name} ${item.score > 0 ? '加分' : '扣分'} ${Math.abs(item.score)}，当前金币 ${todayData.coin}`);
+            if (modalId) document.getElementById(modalId).classList.remove('show');
+            return true;
+        }
+        function showUndoToast(action) {
+            lastAction = action;
+            let toast = document.getElementById('undoToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'undoToast';
+                toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;z-index:99999;display:flex;align-items:center;gap:10px;animation:fadeInUp 0.3s ease;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+                toast.innerHTML = '<span id="undoToastMsg"></span><button id="undoToastBtn" style="background:#7B68EE;color:#fff;border:none;border-radius:12px;padding:6px 14px;font-weight:600;cursor:pointer;white-space:nowrap;">撤销</button>';
+                document.body.appendChild(toast);
+                document.getElementById('undoToastBtn').addEventListener('click', () => {
+                    if (lastAction && lastAction.type === 'record') {
+                        todayData.coin -= lastAction.score;
+                        const idx = todayData.records.findIndex(r => r.id === lastAction.id);
+                        if (idx !== -1) todayData.records.splice(idx, 1);
+                        saveData();
+                        renderCoin();
+                        renderRecordList();
+                        showTip('已撤销');
+                    }
+                    lastAction = null;
+                    toast.style.display = 'none';
+                });
+            }
+            document.getElementById('undoToastMsg').textContent = `${action.name} ${action.score > 0 ? '+' : ''}${action.score}`;
+            toast.style.display = 'flex';
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => { toast.style.display = 'none'; lastAction = null; }, UNDO_TOAST_DURATION);
         }
         function closeTip() {
-            document.getElementById('tipModal').classList.remove('show');
+            closeModalWithFocus('tipModal');
         }
         function showConfirm(msg, callback) {
             document.getElementById('confirmText').textContent = msg;
             confirmCallback = callback;
             document.getElementById('confirmModal').classList.add('show');
+            focusFirstInModal(document.getElementById('confirmModal'));
         }
         function closeConfirm() {
-            document.getElementById('confirmModal').classList.remove('show');
+            closeModalWithFocus('confirmModal');
             confirmCallback = null;
         }
 
         // ===== 启动时从 GitHub Raw 自动拉取数据 =====
         async function loadFromGithub() {
-            const token = localStorage.getItem('github_token_gold');
+            const rawToken = localStorage.getItem('github_token_gold');
+            const token = deobfuscateToken(rawToken);
             if (!token) return;
             try {
                 const url = `https://api.github.com/repos/${GOLD_GITHUB_REPO}/contents/${GOLD_GITHUB_PATH}`;
@@ -1592,8 +1804,8 @@
                 if (!imported.todayData) return;
                 todayData = imported.todayData;
                 weekData = imported.weekData || [];
-                if (imported.addRules) { addRules = imported.addRules; saveRules(); }
-                if (imported.minusRules) { minusRules = imported.minusRules; saveRules(); }
+                if (imported.addRules) { addRules = imported.addRules; saveRules(); forceRenderItemGrid(); }
+                if (imported.minusRules) { minusRules = imported.minusRules; saveRules(); forceRenderItemGrid(); }
                 checkDateReset();
                 saveData();
                 renderCoin();
@@ -1616,6 +1828,33 @@
             renderRecordList();
             bindEvent();
             bindTipEvent();
+            // 焦点陷阱：所有弹窗监听 keydown
+            document.querySelectorAll('.modal-mask').forEach(mask => {
+                mask.addEventListener('keydown', (e) => { if (e.key === 'Tab') trapFocus(e, mask); });
+            });
+            // ESC 关闭弹窗
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal-mask.show').forEach(mask => {
+                        if (!['tipModal','confirmModal'].includes(mask.id)) mask.classList.remove('show');
+                    });
+                }
+                // Ctrl+Z 撤销
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z' && lastAction) {
+                    if (lastAction.type === 'record') {
+                        todayData.coin -= lastAction.score;
+                        const idx = todayData.records.findIndex(r => r.id === lastAction.id);
+                        if (idx !== -1) todayData.records.splice(idx, 1);
+                        saveData();
+                        renderCoin();
+                        renderRecordList();
+                        showTip('已撤销');
+                        lastAction = null;
+                        const toast = document.getElementById('undoToast');
+                        if (toast) toast.style.display = 'none';
+                    }
+                }
+            });
         }
 
         function loadRules() {
@@ -1652,12 +1891,14 @@
                 weekData = weekData.filter(item => item.date !== todayData.date);
                 if (todayData.isSettled) {
                     const savedWeekDay = new Date(todayData.date).getDay();
-                    weekData.push({
-                        date: todayData.date,
-                        weekDay: savedWeekDay,
-                        finalCoin: todayData.coin,
-                        records: todayData.records
-                    });
+                    if (savedWeekDay >= 0) {
+                        weekData.push({
+                            date: todayData.date,
+                            weekDay: savedWeekDay,
+                            finalCoin: todayData.coin,
+                            records: todayData.records
+                        });
+                    }
                     saveData();
                 }
                 todayData = {
@@ -1674,7 +1915,7 @@
         function scheduleAutoSettle() {
             const now = new Date();
             const target = new Date(now);
-            target.setHours(23, 55, 0, 0);
+            target.setHours(AUTO_SETTLE_HOUR, AUTO_SETTLE_MINUTE, 0, 0);
             let ms = target - now;
             if (ms <= 0) {
                 target.setDate(target.getDate() + 1);
@@ -1684,7 +1925,7 @@
                 if (!todayData.isSettled && (todayData.records.length > 0 || todayData.coin !== 0)) {
                     todayData.isSettled = true;
                     weekData = weekData.filter(item => item.date !== todayData.date);
-                    if (getWeekDay() >= 1 && getWeekDay() <= 6) {
+                    if (getWeekDay() >= 0) {
                         weekData.push({
                             date: todayData.date,
                             weekDay: getWeekDay(),
@@ -1701,12 +1942,25 @@
             }, ms);
         }
 
+        // 规则缓存，避免重复渲染
+        let _lastAddRulesHash = '';
+        let _lastMinusRulesHash = '';
+        function getRulesHash(rules) {
+            return rules.map(r => r.id + r.name + r.score).join('|');
+        }
         function renderItemGrid() {
+            const addHash = getRulesHash(addRules);
+            const minusHash = getRulesHash(minusRules);
+            // 如果规则没变，跳过渲染
+            if (addHash === _lastAddRulesHash && minusHash === _lastMinusRulesHash) return;
+            _lastAddRulesHash = addHash;
+            _lastMinusRulesHash = minusHash;
+
             const addGrid = document.getElementById('addItemGrid');
             addGrid.innerHTML = addRules.map((item, index) => `
                 <div class="item-btn-wrap" data-index="${index}">
                     <span class="item-grip">⠿</span>
-                    <button class="item-btn add-item-btn" data-id="${item.id}" data-type="add">${item.name} +${item.score}</button>
+                    <button class="item-btn add-item-btn" data-id="${item.id}" data-type="add">${escapeHtml(item.name)} +${item.score}</button>
                     <button class="item-del-btn" data-id="${item.id}" data-type="add" aria-label="删除">×</button>
                 </div>
             `).join('') + '<button class="item-add-btn" data-type="add">+ 添加加分规则</button>';
@@ -1715,10 +1969,16 @@
             minusGrid.innerHTML = minusRules.map((item, index) => `
                 <div class="item-btn-wrap" data-index="${index}">
                     <span class="item-grip">⠿</span>
-                    <button class="item-btn minus-item-btn" data-id="${item.id}" data-type="minus">${item.name} ${item.score}</button>
+                    <button class="item-btn minus-item-btn" data-id="${item.id}" data-type="minus">${escapeHtml(item.name)} ${item.score}</button>
                     <button class="item-del-btn" data-id="${item.id}" data-type="minus" aria-label="删除">×</button>
                 </div>
             `).join('') + '<button class="item-add-btn" data-type="minus">+ 添加扣分规则</button>';
+        }
+        // 强制重新渲染（规则变化时调用）
+        function forceRenderItemGrid() {
+            _lastAddRulesHash = '';
+            _lastMinusRulesHash = '';
+            renderItemGrid();
         }
 
         function renderRuleLists() {
@@ -1736,7 +1996,7 @@
                     <div class="rule-item-with-edit" data-type="add" data-index="${index}" data-id="${rule.id}">
                         <div class="rule-item-display">
                             <span class="drag-handle">⋮⋮</span>
-                            <span class="rule-name-text">${rule.name} <span class="rule-score rule-score-add">+${rule.score}</span></span>
+                            <span class="rule-name-text">${escapeHtml(rule.name)} <span class="rule-score rule-score-add">+${rule.score}</span></span>
                             <div class="rule-action-btns">
                                 <button class="rule-edit-btn" data-type="add" data-index="${index}">✎</button>
                                 <button class="rule-delete-btn" data-type="add" data-index="${index}">×</button>
@@ -1744,7 +2004,7 @@
                         </div>
                         <div class="rule-item-edit">
                             <div style="display:flex;gap:8px;align-items:center;">
-                                <input type="text" class="rule-edit-input" value="${rule.name}" placeholder="规则名称">
+                                <input type="text" class="rule-edit-input" value="${escapeHtml(rule.name)}" placeholder="规则名称">
                                 <input type="number" class="rule-edit-score" value="${rule.score}" placeholder="分值">
                             </div>
                             <div class="rule-edit-btns">
@@ -1770,7 +2030,7 @@
                     <div class="rule-item-with-edit" data-type="minus" data-index="${index}" data-id="${rule.id}">
                         <div class="rule-item-display">
                             <span class="drag-handle">⋮⋮</span>
-                            <span class="rule-name-text">${rule.name} <span class="rule-score rule-score-minus">${rule.score}</span></span>
+                            <span class="rule-name-text">${escapeHtml(rule.name)} <span class="rule-score rule-score-minus">${rule.score}</span></span>
                             <div class="rule-action-btns">
                                 <button class="rule-edit-btn" data-type="minus" data-index="${index}">✎</button>
                                 <button class="rule-delete-btn" data-type="minus" data-index="${index}">×</button>
@@ -1778,7 +2038,7 @@
                         </div>
                         <div class="rule-item-edit">
                             <div style="display:flex;gap:8px;align-items:center;">
-                                <input type="text" class="rule-edit-input" value="${rule.name}" placeholder="规则名称">
+                                <input type="text" class="rule-edit-input" value="${escapeHtml(rule.name)}" placeholder="规则名称">
                                 <input type="number" class="rule-edit-score" value="${rule.score}" placeholder="分值">
                             </div>
                             <div class="rule-edit-btns">
@@ -1818,23 +2078,42 @@
             });
         }
 
+        // 记录列表最大显示数量
+        const MAX_VISIBLE_RECORDS = 20;
+        let _visibleRecordCount = MAX_VISIBLE_RECORDS;
         function renderRecordList() {
             const recordList = document.getElementById('recordList');
             if (todayData.records.length === 0) {
                 recordList.innerHTML = '<div class="empty-tip">暂无记录，开始记录吧！</div>';
                 return;
             }
-
-            recordList.innerHTML = todayData.records.map((record, index) => `
+            // 重置可见数量（如果记录变少了）
+            if (_visibleRecordCount > todayData.records.length) {
+                _visibleRecordCount = todayData.records.length;
+            }
+            const visibleRecords = todayData.records.slice(0, _visibleRecordCount);
+            const hasMore = todayData.records.length > _visibleRecordCount;
+            recordList.innerHTML = visibleRecords.map((record, index) => `
                 <div class="record-item ${record.score > 0 ? 'add-item' : 'minus-item'}">
                     <div class="record-info">
-                        <div>${record.name} ${record.remark ? `(${record.remark})` : ''}</div>
+                        <div>${escapeHtml(record.name)} ${record.remark ? `(${escapeHtml(record.remark)})` : ''}</div>
                         <div class="record-time">${record.time}</div>
                     </div>
                     <div class="record-score">${record.score > 0 ? '+' : ''}${record.score}</div>
                     <button class="delete-btn" data-index="${index}">×</button>
                 </div>
             `).join('');
+            if (hasMore) {
+                const loadMoreBtn = document.createElement('button');
+                loadMoreBtn.className = 'item-add-btn';
+                loadMoreBtn.style.cssText = 'margin-top:8px;';
+                loadMoreBtn.textContent = `显示更多（还有 ${todayData.records.length - _visibleRecordCount} 条）`;
+                loadMoreBtn.onclick = () => {
+                    _visibleRecordCount += MAX_VISIBLE_RECORDS;
+                    renderRecordList();
+                };
+                recordList.appendChild(loadMoreBtn);
+            }
         }
 
         function getMondayOfWeek() {
@@ -1844,7 +2123,7 @@
             return new Date(now.getFullYear(), now.getMonth(), diff);
         }
 
-        function renderWeekStat() {
+        async function renderWeekStat() {
             const statContent = document.getElementById('weekStatContent');
             
             let allWeekData = [...weekData];
@@ -1956,6 +2235,7 @@
                     html += `<div class="stat-detail"><span>${name}</span><span>${count} 次</span></div>`;
                 }
             }
+            html += '</div>';
 
             // 排行榜：加分项
             const addEntries = Object.entries(addCount).sort((a, b) => b[1] - a[1]);
@@ -2032,6 +2312,7 @@
             }
 
             // 绘制每日走势图
+            await loadChartJs();
             if (window.weekDailyChartInstance) {
                 try { window.weekDailyChartInstance.destroy(); } catch(e) {}
             }
@@ -2114,7 +2395,7 @@
                         <canvas id="weekTrendChart" style="width:100%;height:160px;"></canvas>
                     </div>
                 `;
-                statContent.insertAdjacentHTML('beforeend', html);
+                statContent.innerHTML += html;
 
                 if (window.weekTrendChartInstance) {
                     try { window.weekTrendChartInstance.destroy(); } catch(e) {}
@@ -2184,9 +2465,9 @@
 
                 let analysisHtml = `<div class="analysis-box good"><div class="analysis-title">🎉 进步的地方</div>` + good.join('<br>') + `</div>`;
                 analysisHtml += `<div class="analysis-box bad"><div class="analysis-title">⚠️ 需要改进</div>` + bad.join('<br>') + `</div>`;
-                statContent.insertAdjacentHTML('beforeend', analysisHtml);
+                statContent.innerHTML += analysisHtml;
             } else if (weekGroups.length === 1) {
-                statContent.insertAdjacentHTML('beforeend', '<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>');
+                statContent.innerHTML += '<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>';
             }
         }
 
@@ -2242,11 +2523,15 @@
             return { add, minus };
         }
 
-        function createWeekChart(canvasId, type, labels, data, label, colors) {
+        async function createWeekChart(canvasId, type, labels, data, label, colors) {
+            await loadChartJs();
             const el = document.getElementById(canvasId);
             if (!el) return;
             const ctx = el.getContext('2d');
             const isPie = type === 'pie';
+            // 销毁该 canvas 上的旧图表实例
+            const existingChart = Chart.getChart(el);
+            if (existingChart) existingChart.destroy();
             const chart = new Chart(ctx, {
                 type: type,
                 data: {
@@ -2488,18 +2773,18 @@
 
             // 保存并重新渲染
             saveRules();
-            renderItemGrid();
+            forceRenderItemGrid();
             renderRuleLists();
             
             // 关闭弹窗
-            document.getElementById('editScoreModal').classList.remove('show');
+            closeModalWithFocus('editScoreModal');
             currentEditRule = null;
             showTip(`「${rule.name}」分值修改成功！`);
         }
 
         // 取消修改分值
         function cancelEditScore() {
-            document.getElementById('editScoreModal').classList.remove('show');
+            closeModalWithFocus('editScoreModal');
             currentEditRule = null;
         }
 
@@ -2589,21 +2874,8 @@
                 const btn = e.target.closest('.add-item-btn');
                 if (btn) {
                     selectedAddItem = addRules.find(item => item.id === btn.dataset.id);
-                    if (!selectedAddItem) return;
                     const remark = document.getElementById('addRemark').value;
-                    const newRecord = {
-                        id: Date.now(),
-                        name: selectedAddItem.name,
-                        score: selectedAddItem.score,
-                        remark: remark,
-                        time: formatTime()
-                    };
-                    todayData.records.unshift(newRecord);
-                    todayData.coin += selectedAddItem.score;
-                    saveData();
-                    renderCoin();
-                    renderRecordList();
-                    document.getElementById('addModal').classList.remove('show');
+                    addRecord(selectedAddItem, remark, 'addModal');
                 }
             });
 
@@ -2614,19 +2886,7 @@
                     return;
                 }
                 const remark = document.getElementById('addRemark').value;
-                const newRecord = {
-                    id: Date.now(),
-                    name: selectedAddItem.name,
-                    score: selectedAddItem.score,
-                    remark: remark,
-                    time: formatTime()
-                };
-                todayData.records.unshift(newRecord);
-                todayData.coin += selectedAddItem.score;
-                saveData();
-                renderCoin();
-                renderRecordList();
-                document.getElementById('addModal').classList.remove('show');
+                addRecord(selectedAddItem, remark, 'addModal');
             });
 
             // 原有扣分单击选中功能（过滤长按）
@@ -2653,21 +2913,8 @@
                 const btn = e.target.closest('.minus-item-btn');
                 if (btn) {
                     selectedMinusItem = minusRules.find(item => item.id === btn.dataset.id);
-                    if (!selectedMinusItem) return;
                     const remark = document.getElementById('minusRemark').value;
-                    const newRecord = {
-                        id: Date.now(),
-                        name: selectedMinusItem.name,
-                        score: selectedMinusItem.score,
-                        remark: remark,
-                        time: formatTime()
-                    };
-                    todayData.records.unshift(newRecord);
-                    todayData.coin += selectedMinusItem.score;
-                    saveData();
-                    renderCoin();
-                    renderRecordList();
-                    document.getElementById('minusModal').classList.remove('show');
+                    addRecord(selectedMinusItem, remark, 'minusModal');
                 }
             });
 
@@ -2678,19 +2925,7 @@
                     return;
                 }
                 const remark = document.getElementById('minusRemark').value;
-                const newRecord = {
-                    id: Date.now(),
-                    name: selectedMinusItem.name,
-                    score: selectedMinusItem.score,
-                    remark: remark,
-                    time: formatTime()
-                };
-                todayData.records.unshift(newRecord);
-                todayData.coin += selectedMinusItem.score;
-                saveData();
-                renderCoin();
-                renderRecordList();
-                document.getElementById('minusModal').classList.remove('show');
+                addRecord(selectedMinusItem, remark, 'minusModal');
             });
 
             // 加分/扣分弹窗内：删除规则
@@ -2850,9 +3085,10 @@
                     b.style.color = 'var(--text-dark)';
                 });
                 document.getElementById('addModal').classList.add('show');
+                focusFirstInModal(document.getElementById('addModal'));
             });
             document.getElementById('closeAddModal').addEventListener('click', () => {
-                document.getElementById('addModal').classList.remove('show');
+                closeModalWithFocus('addModal');
             });
             document.getElementById('openMinusModal').addEventListener('click', () => {
                 selectedMinusItem = null;
@@ -2862,9 +3098,10 @@
                     b.style.color = 'var(--text-dark)';
                 });
                 document.getElementById('minusModal').classList.add('show');
+                focusFirstInModal(document.getElementById('minusModal'));
             });
             document.getElementById('closeMinusModal').addEventListener('click', () => {
-                document.getElementById('minusModal').classList.remove('show');
+                closeModalWithFocus('minusModal');
             });
 
             // 原有记录删除功能
@@ -2886,7 +3123,7 @@
                 showConfirm(msg, () => {
                     todayData.isSettled = true;
                     weekData = weekData.filter(item => item.date !== todayData.date);
-                    if (getWeekDay() >= 1 && getWeekDay() <= 6) {
+                    if (getWeekDay() >= 0) {
                         weekData.push({
                             date: todayData.date,
                             weekDay: getWeekDay(),
@@ -2901,9 +3138,10 @@
             });
             document.getElementById('resetBtn').addEventListener('click', () => {
                 document.getElementById('resetChoiceModal').classList.add('show');
+                focusFirstInModal(document.getElementById('resetChoiceModal'));
             });
             document.getElementById('closeResetModal').addEventListener('click', () => {
-                document.getElementById('resetChoiceModal').classList.remove('show');
+                closeModalWithFocus('resetChoiceModal');
             });
             document.getElementById('doTodayReset').addEventListener('click', () => {
                 showConfirm('确认重置今日数据？所有今日记录和金币将被清空', () => {
@@ -2914,7 +3152,7 @@
                     saveData();
                     renderCoin();
                     renderRecordList();
-                    document.getElementById('resetChoiceModal').classList.remove('show');
+                    closeModalWithFocus('resetChoiceModal');
                     showTip('今日数据重置完成！');
                 });
             });
@@ -2927,21 +3165,18 @@
                     saveData();
                     renderCoin();
                     renderRecordList();
-                    document.getElementById('resetChoiceModal').classList.remove('show');
+                    closeModalWithFocus('resetChoiceModal');
                     showTip('全部数据重置完成！');
                 });
             });
 
             // 原有周统计、每周分析功能
             document.getElementById('openWeekStat').addEventListener('click', () => {
+                renderWeekStat();
                 document.getElementById('weekStatPage').classList.add('show');
-                // 用 requestAnimationFrame 确保页面渲染完成后再绘制图表（canvas 需要可见才能获取尺寸）
-                requestAnimationFrame(() => {
-                    renderWeekStat();
-                });
             });
             document.getElementById('closeWeekStat').addEventListener('click', () => {
-                document.getElementById('weekStatPage').classList.remove('show');
+                closeModalWithFocus('weekStatPage');
             });
             // 每周分析已合并入周统计，不再单独打开
 
@@ -2949,7 +3184,7 @@
             document.querySelectorAll('.modal-mask').forEach(mask => {
                 mask.addEventListener('click', (e) => {
                     if (e.target === mask && !['tipModal','confirmModal','editScoreModal'].includes(mask.id)) {
-                        mask.classList.remove('show');
+                        closeModalWithFocus(mask.id);
                     }
                 });
             });
@@ -2960,7 +3195,7 @@
                 document.getElementById('ruleSettingsPage').classList.add('show');
             });
             document.getElementById('closeRuleSettings').addEventListener('click', () => {
-                document.getElementById('ruleSettingsPage').classList.remove('show');
+                closeModalWithFocus('ruleSettingsPage');
             });
             document.getElementById('addRuleList').addEventListener('click', (e) => handleRuleAction(e, 'add'));
             document.getElementById('minusRuleList').addEventListener('click', (e) => handleRuleAction(e, 'minus'));
@@ -3094,11 +3329,11 @@
                 });
             });
             document.getElementById('cancelAddRule').addEventListener('click', () => {
-                document.getElementById('addRuleSheet').classList.remove('show');
+                closeModalWithFocus('addRuleSheet');
             });
             document.getElementById('addRuleSheet').addEventListener('click', (e) => {
                 if (e.target === e.currentTarget) {
-                    document.getElementById('addRuleSheet').classList.remove('show');
+                    closeModalWithFocus('addRuleSheet');
                 }
             });
             document.getElementById('confirmAddRule').addEventListener('click', doAddRuleFromSheet);
@@ -3142,13 +3377,14 @@
                 renderRuleLists();
                 renderItemGrid();
                 animateLastRule(addRuleType === 'add' ? 'addRuleList' : 'minusRuleList');
-                document.getElementById('addRuleSheet').classList.remove('show');
+                closeModalWithFocus('addRuleSheet');
                 showTip(addRuleType === 'add' ? '加分规则新增成功！' : '扣分规则新增成功！');
             }
 
             // 导出与同步功能
             document.getElementById('exportDataBtn').addEventListener('click', () => {
                 document.getElementById('exportModal').classList.add('show');
+                focusFirstInModal(document.getElementById('exportModal'));
             });
             document.getElementById('doExport').addEventListener('click', exportGoldData);
             document.getElementById('doImport').addEventListener('click', () => {
@@ -3157,23 +3393,34 @@
             document.getElementById('importFileInput').addEventListener('change', importGoldData);
             document.getElementById('syncDataBtn').addEventListener('click', () => {
                 const saved = localStorage.getItem('github_token_gold');
-                if (saved) document.getElementById('syncTokenInput').value = saved;
+                if (saved) document.getElementById('syncTokenInput').value = deobfuscateToken(saved);
                 document.getElementById('syncStatus').textContent = '就绪';
                 document.getElementById('syncStatus').style.cssText = 'font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;';
                 document.getElementById('syncModal').classList.add('show');
+                focusFirstInModal(document.getElementById('syncModal'));
             });
-            // 同步按钮：直接执行同步
+            // 同步按钮：先更新状态再执行同步
             document.getElementById('doSyncToGithub').addEventListener('click', () => {
-                closeModal('syncModal');
                 syncGoldToGithub();
+            });
+            // 关闭按钮
+            document.getElementById('closeExportModal').addEventListener('click', () => {
+                closeModalWithFocus('exportModal');
+            });
+            document.getElementById('closeSyncModal').addEventListener('click', () => {
+                closeModalWithFocus('syncModal');
             });
         }
 
         // ===== 导出/导入功能 =====
         function closeModal(id) {
-            document.getElementById(id).classList.remove('show');
+            closeModalWithFocus(id);
         }
         function exportGoldData() {
+            if (!todayData.records.length && !weekData.length) {
+                showTip('暂无数据可导出');
+                return;
+            }
             const data = { todayData, weekData, addRules, minusRules, exportTime: new Date().toISOString() };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -3207,7 +3454,7 @@
                     renderCoin();
                     renderRecordList();
                     renderItemGrid();
-                    document.getElementById('exportModal').classList.remove('show');
+                    closeModalWithFocus('exportModal');
                     showTip('✅ 数据导入成功！');
                 } catch(err) {
                     showTip('❌ 文件解析失败：' + err.message);
@@ -3219,24 +3466,71 @@
 
         // ===== GitHub同步功能 =====
         async function syncGoldToGithub() {
-            const token = localStorage.getItem('github_token_gold');
+            const rawToken = localStorage.getItem('github_token_gold');
+            const token = deobfuscateToken(rawToken);
             if (!token) { showTip('❌ 请先配置 GitHub Token'); return; }
             const data = { todayData, weekData, addRules, minusRules, exportTime: new Date().toISOString() };
-            showTip('⏳ 正在同步到 GitHub...');
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = '⏳ 正在同步...';
+            statusEl.style.cssText = 'font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#fff3cd;margin-bottom:10px;';
             try {
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
                 const url = `https://api.github.com/repos/${GOLD_GITHUB_REPO}/contents/${GOLD_GITHUB_PATH}`;
                 let sha = null;
+                let remoteData = null;
                 const check = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' } });
-                if (check.ok) { sha = (await check.json()).sha; }
-                else if (check.status !== 404) { const e = await check.json(); showTip(`❌ ${e.message}`); return; }
-                const body = { message: `金币数据同步 ${new Date().toLocaleString('zh-CN')}`, content };
-                if (sha) body.sha = sha;
-                const res = await fetch(url, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' }, body: JSON.stringify(body) });
-                if (res.ok) {
-                    showTip('✅ 同步到 GitHub 成功！');
-                } else { const e = await res.json(); showTip(`❌ ${e.message}`); }
-            } catch(e) { showTip(`❌ ${e.message}`); }
+                if (check.ok) {
+                    const remoteFile = await check.json();
+                    sha = remoteFile.sha;
+                    try {
+                        remoteData = JSON.parse(decodeURIComponent(escape(atob(remoteFile.content))));
+                    } catch(e) {}
+                } else if (check.status !== 404) {
+                    const e = await check.json();
+                    statusEl.textContent = '❌ ' + e.message;
+                    statusEl.style.background = '#fee2e2';
+                    return;
+                }
+                // 冲突检测：如果远程数据更新，提示用户
+                if (remoteData && remoteData.exportTime) {
+                    const remoteTime = new Date(remoteData.exportTime).getTime();
+                    const localTime = new Date(data.exportTime).getTime();
+                    if (remoteTime > localTime) {
+                        statusEl.innerHTML = '⚠️ 远程数据更新（' + new Date(remoteData.exportTime).toLocaleString('zh-CN') + '）<br><span style="font-size:12px;">点击同步将覆盖远程数据</span>';
+                        statusEl.style.background = '#fef3c7';
+                        // 添加覆盖按钮
+                        const overrideBtn = document.createElement('button');
+                        overrideBtn.textContent = '确认覆盖';
+                        overrideBtn.style.cssText = 'margin-top:8px;padding:6px 16px;border:none;border-radius:8px;background:#f59e0b;color:white;font-weight:600;cursor:pointer;';
+                        overrideBtn.onclick = async () => {
+                            overrideBtn.remove();
+                            await doSyncToGithub(data, sha, token, statusEl);
+                        };
+                        statusEl.appendChild(overrideBtn);
+                        return;
+                    }
+                }
+                await doSyncToGithub(data, sha, token, statusEl);
+            } catch(e) {
+                statusEl.textContent = '❌ ' + e.message;
+                statusEl.style.background = '#fee2e2';
+            }
+        }
+        async function doSyncToGithub(data, sha, token, statusEl) {
+            statusEl.textContent = '⏳ 正在同步...';
+            statusEl.style.cssText = 'font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#fff3cd;margin-bottom:10px;';
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+            const url = `https://api.github.com/repos/${GOLD_GITHUB_REPO}/contents/${GOLD_GITHUB_PATH}`;
+            const body = { message: `金币数据同步 ${new Date().toLocaleString('zh-CN')}`, content };
+            if (sha) body.sha = sha;
+            const res = await fetch(url, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' }, body: JSON.stringify(body) });
+            if (res.ok) {
+                statusEl.textContent = '✅ 同步成功！';
+                statusEl.style.cssText = 'font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#d1fae5;margin-bottom:10px;';
+            } else {
+                const e = await res.json();
+                statusEl.textContent = '❌ ' + e.message;
+                statusEl.style.background = '#fee2e2';
+            }
         }
 
         // 原有规则操作函数
@@ -3309,7 +3603,7 @@
                             renderRuleLists();
                             renderItemGrid();
                             showTip('规则删除成功！');
-                        }, 250);
+                        }, RULE_ANIMATION_DURATION);
                     } else {
                         // fallback if element not found
                         if (type === 'add') {
@@ -3325,6 +3619,7 @@
                 });
             }
         }
+        init();
     </script>
 </body>
 </html>
