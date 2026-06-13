@@ -1261,6 +1261,12 @@
             text-align: center;
             color: var(--text-dark);
         }
+        /* 手机端图表容器确保有高度 */
+        canvas {
+            max-width: 100%;
+        }
+            color: var(--text-dark);
+        }
         .chart-toggle-bar {
             text-align: center;
             margin-bottom: 16px;
@@ -1564,9 +1570,9 @@
             <input type="password" id="syncTokenInput" placeholder="GitHub Personal Access Token" style="width:100%;padding:12px 14px;border:2px solid #d0d9e6;border-radius:12px;font-size:14px;outline:none;margin-bottom:6px;box-sizing:border-box;" oninput="localStorage.setItem('github_token_gold', obfuscateToken(this.value.trim()))">
             <p style="font-size:12px;color:#94a3b8;margin-bottom:14px;line-height:1.4;">需要 <strong>repo</strong> 权限。可在 <a href="https://github.com/settings/tokens" target="_blank" style="color:#3B82F6;text-decoration:none;">GitHub Token设置</a> 生成。</p>
             <div id="syncStatus" style="font-size:13px;color:#475569;text-align:center;min-height:20px;padding:8px 12px;border-radius:10px;background:#f8fafc;margin-bottom:10px;">就绪</div>
-            <div style="display:flex;flex-direction:column;gap:14px;">
-                <button class="bottom-btn" id="doSyncToGithub" style="border-color:var(--main-purple);color:var(--main-purple);height:64px;font-size:18px;border-radius:16px;">☁️ 同步到 GitHub</button>
-                <button class="bottom-btn danger-btn" id="closeSyncModal" style="height:64px;font-size:18px;border-radius:16px;">关闭</button>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <button class="bottom-btn" id="doSyncToGithub" style="border-color:var(--main-purple);color:var(--main-purple);height:72px;font-size:20px;border-radius:18px;padding:0 20px;">☁️ 同步到 GitHub</button>
+                <button class="bottom-btn danger-btn" id="closeSyncModal" style="height:72px;font-size:20px;border-radius:18px;padding:0 20px;">关闭</button>
             </div>
         </div>
     </div>
@@ -2292,24 +2298,21 @@
             html += '</div>';
             statContent.innerHTML = html;
 
-            // 周导航按钮事件
-            const prevBtn = document.getElementById('prevWeek');
-            const nextBtn = document.getElementById('nextWeek');
-            if (prevBtn) {
-                prevBtn.addEventListener('click', () => {
+            // 周导航按钮事件（使用事件委托，避免 innerHTML += 重建DOM导致事件丢失）
+            statContent.onclick = (e) => {
+                const prevBtn = e.target.closest('#prevWeek');
+                const nextBtn = e.target.closest('#nextWeek');
+                if (prevBtn) {
                     window.weekStatOffset = (window.weekStatOffset || 0) - 1;
                     renderWeekStat();
-                });
-            }
-            if (nextBtn) {
-                nextBtn.addEventListener('click', () => {
+                } else if (nextBtn) {
                     window.weekStatOffset = (window.weekStatOffset || 0) + 1;
                     if (window.weekStatOffset >= 0) {
                         window.weekStatOffset = 0;
                     }
                     renderWeekStat();
-                });
-            }
+                }
+            };
 
             // 绘制每日走势图
             await loadChartJs();
@@ -2395,7 +2398,7 @@
                         <canvas id="weekTrendChart" style="width:100%;height:160px;"></canvas>
                     </div>
                 `;
-                statContent.innerHTML += html;
+                statContent.insertAdjacentHTML('beforeend', html);
 
                 if (window.weekTrendChartInstance) {
                     try { window.weekTrendChartInstance.destroy(); } catch(e) {}
@@ -2465,9 +2468,9 @@
 
                 let analysisHtml = `<div class="analysis-box good"><div class="analysis-title">🎉 进步的地方</div>` + good.join('<br>') + `</div>`;
                 analysisHtml += `<div class="analysis-box bad"><div class="analysis-title">⚠️ 需要改进</div>` + bad.join('<br>') + `</div>`;
-                statContent.innerHTML += analysisHtml;
+                statContent.insertAdjacentHTML('beforeend', analysisHtml);
             } else if (weekGroups.length === 1) {
-                statContent.innerHTML += '<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>';
+                statContent.insertAdjacentHTML('beforeend', '<div class="analysis-box">这是第一周，暂无上周数据可对比哦～继续坚持！</div>');
             }
         }
 
@@ -3172,8 +3175,9 @@
 
             // 原有周统计、每周分析功能
             document.getElementById('openWeekStat').addEventListener('click', () => {
-                renderWeekStat();
                 document.getElementById('weekStatPage').classList.add('show');
+                // 先显示页面，再渲染内容（手机端 display:none 时 canvas 尺寸为0）
+                requestAnimationFrame(() => renderWeekStat());
             });
             document.getElementById('closeWeekStat').addEventListener('click', () => {
                 closeModalWithFocus('weekStatPage');
