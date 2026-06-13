@@ -1,24 +1,9 @@
 {
   "todayData": {
-    "date": "2026-6-11",
-    "coin": 4,
-    "records": [
-      {
-        "id": 1781178094980,
-        "name": "完成一项任务",
-        "score": 2,
-        "remark": "作业",
-        "time": "19:41"
-      },
-      {
-        "id": 1781175964629,
-        "name": "完成一项任务",
-        "score": 2,
-        "remark": "",
-        "time": "19:06"
-      }
-    ],
-    "isSettled": true
+    "date": "2026-6-13",
+    "coin": 0,
+    "records": [],
+    "isSettled": false
   },
   "weekData": [
     {
@@ -1192,5 +1177,5 @@
       "score": -1
     }
   ],
-  "exportTime": "2026-06-11T13:02:22.582Z"
+  "exportTime": "2026-06-13T11:50:57.822Z"
 }
